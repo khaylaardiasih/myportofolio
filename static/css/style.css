@@ -1,192 +1,309 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+}
+
+html {
+   scroll-behavior: smooth; /* Scroll mulus saat menu diklik */
 }
 
 :root {
-    --ink: #1c1917;
-    --paper: #faf6f0;
-    --accent: #d95d39;
-    --accent-dark: #a8442a;
-    --line: #e3d9c9;
-    --text-muted: #6b6459;
-    --radius: 4px;
+   --ink: #1c1917;
+   --paper: #faf6f0;
+   --accent: #f472b6;
+   --accent-dark: #db2777;
+   --line: #e3d9c9;
+   --text-muted: #6b6459;
+   --radius: 4px;
 }
 
 body {
-    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: var(--ink);
-    background-color: var(--paper);
-    line-height: 1.6;
+   font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+   color: var(--ink);
+   background-color: var(--paper);
+   line-height: 1.6;
 }
 
-h1, .brand {
-    font-family: "Space Grotesk", -apple-system, sans-serif;
+h1, .brand, .section-title, .exp-title { /* Menambahkan .section-title & .exp-title ke font space grotesk */
+   font-family: "Space Grotesk", -apple-system, sans-serif;
 }
 
 .container {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
+   max-width: 960px;
+   margin: 0 auto;
+   padding: 0 1.5rem;
 }
 .site-header {
-    border-bottom: 1px solid var(--line);
+   border-bottom: 1px solid var(--line);
+   /* Agar menu navigasi tetap di atas saat di scroll */
+   position: sticky;
+   top: 0;
+   background-color: var(--paper);
+   z-index: 100;
 }
 
 .site-header .container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.25rem 1.5rem;
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding: 1.25rem 1.5rem;
 }
 
 .brand {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--ink);
-    text-decoration: none;
+   font-size: 1.3rem;
+   font-weight: 700;
+   color: var(--ink);
+   text-decoration: none;
 }
 
 .site-header nav {
-    display: flex;
-    gap: 2rem;
+   display: flex;
+   gap: 2rem;
 }
 
 .site-header nav a {
-    color: var(--ink);
-    text-decoration: none;
-    font-size: 0.95rem;
+   color: var(--ink);
+   text-decoration: none;
+   font-size: 0.95rem;
+   /* Menambahkan font-weight dan transition untuk efek hover */
+   font-weight: 600;
+   transition: color 0.2s ease;
+}
+
+.site-header nav a:hover { /* Efek hover berwarna pink tua di menu navigasi*/
+   color: var(--accent-dark);
 }
 .hero {
-    padding: 4.5rem 0 5rem;
+   padding: 4.5rem 0 5rem;
+   /* Mengatur tinggi minimal 1 layar penuh */
+   min-height: calc(100vh - 70px);
+   display: flex;
+   align-items: center;
 }
 
 .hero-grid {
-    display: grid;
-    grid-template-columns: 1.3fr 1fr;
-    grid-template-areas:
-        "identity photo"
-        "details  photo";
-    gap: 1.5rem 3rem;
+   display: grid;
+   grid-template-columns: 1.3fr 1fr;
+   grid-template-areas:
+       "identity photo"
+       "details  photo";
+   gap: 1.5rem 3rem;
+   width: 100%;
 }
 
 .hero-identity {
-    grid-area: identity;
+   grid-area: identity;
 }
 
 .hero-details {
-    grid-area: details;
+   grid-area: details;
 }
 
 .hero-kicker {
-    font-size: 0.85rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--accent-dark);
-    font-weight: 700;
-    margin-bottom: 0.75rem;
+   font-size: 0.85rem;
+   letter-spacing: 0.08em;
+   text-transform: uppercase;
+   color: var(--accent-dark);
+   font-weight: 700;
+   margin-bottom: 0.75rem;
 }
 
 .hero-identity h1 {
-    font-size: clamp(3rem, 7vw, 5rem);
-    line-height: 0.95;
+   font-size: clamp(3rem, 7vw, 5rem);
+   line-height: 0.95;
 }
 
 .bio {
-    color: var(--text-muted);
-    max-width: 480px;
-    margin-bottom: 1.5rem;
+   color: var(--text-muted);
+   max-width: 480px;
+   margin-bottom: 1.5rem;
 }
 
 .meta-list {
-    display: flex;
-    gap: 2rem;
-    margin-bottom: 1.5rem;
+   display: flex;
+   gap: 2rem;
+   margin-bottom: 1.5rem;
 }
 
 .meta-row dt {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
-    margin-bottom: 0.15rem;
+   font-size: 0.75rem;
+   text-transform: uppercase;
+   letter-spacing: 0.06em;
+   color: var(--text-muted);
+   margin-bottom: 0.15rem;
 }
 
 .meta-row dd {
-    font-weight: 600;
+   font-weight: 600;
 }
 
 .social-links {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+   display: flex;
+   gap: 0.5rem;
+   flex-wrap: wrap;
 }
 
 .social-link {
-    display: inline-block;
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-decoration: none;
-    color: var(--paper);
-    background-color: var(--ink);
-    border-radius: var(--radius);
-    padding: 0.5rem 1.1rem;
-    transition: background-color 0.2s ease;
+   display: inline-block;
+   font-size: 0.85rem;
+   font-weight: 600;
+   text-decoration: none;
+   color: var(--paper);
+   background-color: var(--ink);
+   border-radius: var(--radius);
+   padding: 0.5rem 1.1rem;
+   transition: background-color 0.2s ease;
 }
 
 .social-link:hover {
-    background-color: var(--accent);
+   background-color: var(--accent);
 }
 
 .hero-photo {
-    grid-area: photo;
-    align-self: center;
-    position: relative;
+   grid-area: photo;
+   align-self: center;
+   position: relative;
 }
 
 .photo-block {
-    position: absolute;
-    top: 1.25rem;
-    left: 1.25rem;
-    width: 100%;
-    height: 100%;
-    background-color: var(--accent);
-    border-radius: var(--radius);
-    z-index: 0;
+   position: absolute;
+   top: 1.25rem;
+   left: 1.25rem;
+   width: 100%;
+   height: 100%;
+   background-color: var(--accent);
+   border-radius: var(--radius);
+   z-index: 0;
 }
 
 .avatar {
-    position: relative;
-    z-index: 1;
-    display: block;
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-    border-radius: var(--radius);
-    border: 3px solid var(--ink);
+   position: relative;
+   z-index: 1;
+   display: block;
+   width: 100%;
+   aspect-ratio: 1 / 1;
+   object-fit: cover;
+   border-radius: var(--radius);
+   border: 3px solid var(--ink);
 }
+
+/* Tugas 1 = Membuat 1 section baru. Saya pilih untuk membuat section Experiences*/
+.experiences-section {
+   padding: 5rem 0 6rem; /* jarak ruang atas dn bawah section */
+   border-top: 1px solid var(--line); /* Garis pemisah section */
+   min-height: calc(100vh - 70px); /* tinggi minimal 1 layar penuh */
+   display: flex; /* aktifkan flexbox untuk mengatur konten di dalam section */
+   align-items: center; /* posisikan konten di tengah */
+}
+
+.experiences-section .container {
+   width: 100%; /* lebar kontainer penuh */
+}
+
+.section-header {
+   text-align: center; /* Judul di tengah */
+   margin-bottom: 3rem; /* jarak judul dengan kotak-kotak */
+}
+
+.section-title {
+   font-size: clamp(2.2rem, 5vw, 3.2rem);
+   color: var(--ink);
+   letter-spacing: -0.02em;
+}
+
+/* 4 Kotak berukuran sama*/
+.experiences-grid {
+   display: grid; /* pakai layout grid */
+   grid-template-columns: repeat(2, 1fr); /* bagi 2 kolom sama besar */
+   gap: 1.75rem; /* jarak antar kotak */
+}
+
+/* Setting kotak tidak berwarna dan outlinenya pink */
+.exp-card {
+   background-color: transparent;
+   border: 2px solid var(--accent);
+   border-radius: var(--radius); /* sudut kotak melengkung */
+   padding: 2rem; /* ruang dalam kotak*/
+   display: flex;
+   flex-direction: column; /* susunan konten dari atas ke bawah */
+   justify-content: flex-start; /* konten rata ke atas */
+   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; /* efek saat hover */
+}
+
+/* Efek hover kotak */
+.exp-card:hover {
+   transform: translateY(-4px); /* naik sedikit saat hover */
+   border-color: var(--accent-dark);
+   box-shadow: 0 8px 20px rgba(244, 114, 182, 0.25); /* efek bayangan saat hover */
+}
+
+/* Judul besar experience */
+.exp-title {
+   font-size: 1.35rem;
+   font-weight: 700;
+   color: var(--ink);
+   margin-bottom: 0.35rem;
+   line-height: 1.25;
+}
+
+/* Tahun experience */
+.exp-year {
+   font-size: 0.85rem;
+   font-weight: 600;
+   color: var(--accent-dark);
+   margin-bottom: 0.85rem;
+}
+
+/* Deskripsi experience */
+.exp-desc {
+   font-size: 0.95rem;
+   color: var(--text-muted);
+   line-height: 1.55;
+}
+
+/* Footer */
 .site-footer {
-    padding: 1.5rem;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    border-top: 1px solid var(--line);
+   padding: 1.5rem;
+   color: var(--text-muted);
+   font-size: 0.85rem;
+   border-top: 1px solid var(--line);
 }
 
 @media (max-width: 600px) {
-    .hero-grid {
-        grid-template-columns: 1fr;
-        grid-template-areas:
-            "identity"
-            "photo"
-            "details";
-    }
 
-    .hero-photo {
-        max-width: 220px;
-    }
+   .hero { /* Penyesyaian tampilan di hp */
+       padding: 3rem 0;
+       min-height: auto;
+   }
 
-    .social-links {
-        justify-content: flex-start;
-    }
+   .hero-grid {
+       grid-template-columns: 1fr;
+       grid-template-areas:
+           "identity"
+           "photo"
+           "details";
+   }
+
+   .hero-photo {
+       max-width: 220px;
+   }
+
+   .social-links {
+       justify-content: flex-start;
+   }
+
+   .experiences-section { /* Penyesyaian tampilan section Experiences di hp */
+       padding: 3.5rem 0;
+       min-height: auto;
+   }
+
+   /* Di layar ponsel, 4 kotak otomatis menjadi 1 kolom */
+   .experiences-grid {
+       grid-template-columns: 1fr; /* jadi 1 kolom vertikal */
+       gap: 1.25rem;
+   }
+   .exp-card { /* Penyesuaian kotak di hp */
+       padding: 1.5rem;
+   }
 }
