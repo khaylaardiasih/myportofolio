@@ -10,11 +10,11 @@ html {
 
 :root {
    --ink: #1c1917;
-   --paper: #faf6f0;
+   --paper: #fae7f0;
    --accent: #f472b6;
    --accent-dark: #db2777;
    --line: #e3d9c9;
-   --text-muted: #6b6459;
+   --text-muted: #6b596b;
    --radius: 4px;
 }
 
@@ -307,3 +307,61 @@ h1, .brand, .section-title, .exp-title { /* Menambahkan .section-title & .exp-ti
        padding: 1.5rem;
    }
 }
+
+/* Tambahan Kreativitas: sparkles pink & gold di background halaman */
+.hero, .experiences-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.sparkle {
+    position: absolute; /* posisi bebas */
+    user-select: none;
+    pointer-events: none; /* tidak menghalangi elemen lain */
+    z-index: 0;
+    animation: twinkleFloat 3.2s ease-in-out infinite;
+}
+
+/* pink sparkles with glow */
+.sparkle-pink {
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(244, 114, 182, 0.65);
+}
+
+/* gold sparkles with glow */
+.sparkle-gold {
+    color: #f59e0b;
+    text-shadow: 0 0 10px rgba(245, 158, 11, 0.55);
+}
+
+/* Animasi melayang dan kedap kedip */
+@keyframes twinkleFloat {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg) scale(0.85);
+        opacity: 0.3;
+    }
+    50% {
+        transform: translateY(-10px) rotate(10deg) scale(1.2);
+        opacity: 0.95;
+    }
+}
+
+/* Posisi sparkles di section profile */
+.sp-1 { top: 8%;  left: 4%;   font-size: 1.5rem; animation-delay: 0s;   animation-duration: 3.5s; }
+.sp-2 { top: 14%; right: 8%;  font-size: 1.3rem; animation-delay: 1.1s; animation-duration: 4s; }
+.sp-3 { top: 38%; left: 9%;   font-size: 1.7rem; animation-delay: 2.2s; animation-duration: 3s; }
+.sp-4 { top: 52%; right: 6%;  font-size: 1.4rem; animation-delay: 0.7s; animation-duration: 3.8s; }
+.sp-5 { bottom: 18%; left: 42%; font-size: 1.2rem; animation-delay: 1.7s; animation-duration: 3.2s; }
+.sp-6 { top: 76%; left: 6%;   font-size: 1.6rem; animation-delay: 2.8s; animation-duration: 4.2s; }
+.sp-7 { bottom: 10%; right: 18%; font-size: 1.4rem; animation-delay: 0.4s; animation-duration: 3.6s; }
+.sp-8 { top: 12%; right: 40%; font-size: 1.1rem; animation-delay: 1.9s; animation-duration: 2.8s; }
+
+/* Posisi sparkles di section experiences */
+.sp-9  { top: 8%;  left: 7%;   font-size: 1.4rem; animation-delay: 0.5s; animation-duration: 3.6s; }
+.sp-10 { top: 10%; right: 12%; font-size: 1.3rem; animation-delay: 1.8s; animation-duration: 4.1s; }
+.sp-11 { top: 32%; right: 5%;  font-size: 1.6rem; animation-delay: 0.2s; animation-duration: 3.1s; }
+.sp-12 { top: 46%; left: 4%;   font-size: 1.5rem; animation-delay: 2.5s; animation-duration: 3.9s; }
+.sp-13 { bottom: 26%; right: 8%; font-size: 1.2rem; animation-delay: 1.3s; animation-duration: 3.4s; }
+.sp-14 { bottom: 12%; left: 12%; font-size: 1.6rem; animation-delay: 0.9s; animation-duration: 4s; }
+.sp-15 { bottom: 6%;  right: 38%; font-size: 1.4rem; animation-delay: 2.1s; animation-duration: 3.3s; }
+.sp-16 { top: 22%; left: 24%;  font-size: 1.1rem; animation-delay: 1.5s; animation-duration: 2.9s; }
