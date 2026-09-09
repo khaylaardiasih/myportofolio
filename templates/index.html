@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Khayla - Portfolio</title>
+    <title>{{ name }} - Portofolio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
@@ -12,10 +12,10 @@
 <body>
     <header class="site-header">
         <div class="container">
-            <a href="#profile" class="brand">Khayla</a>
+            <a href="{% url 'main:show_main' %}" class="brand">{{ name }}</a>
             <nav>
-                <a href="#profile">Profile</a>
-                <a href="#experiences">Experiences</a>
+                <a href="{% url 'main:show_main' %}">Profile</a>
+                <a href="{% url 'main:show_experience' %}">Experience</a>
             </nav>
         </div>
     </header>
@@ -31,78 +31,33 @@
             <span class="sparkle sparkle-gold sp-6">✦</span>
             <span class="sparkle sparkle-gold sp-7">✧</span>
             <span class="sparkle sparkle-pink sp-8">✧</span>
+
             <div class="container hero-grid">
                 <div class="hero-identity">
-                    <p class="Information Systems · Universitas Indonesia">Computer Science &middot; Universitas Indonesia</p>
-                    <h1>Khayla Syafira Ardiasih</h1>
+                    <p class="role-tag">Information Systems &middot; Universitas Indonesia</p>
+                    <h1>{{ name }}</h1>
                 </div>
                 <div class="hero-photo">
                     <div class="photo-block"></div>
-                    <img class="avatar" src="/static/img/ProfilePBP.png" alt="Photo of Khayla">
+                    <img class="avatar" src="/static/img/ProfilePBP.png" alt="Photo of {{ name }}">
                 </div>
                 <div class="hero-details">
-                    <p class="bio">IS Student at Universitas Indonesia. Driven by curiosity and ambition to shape the future through technology. A relentless lifelong learner, always seeking to grow, create, and turn ideas into meaningful impact.</p>
+                    <p class="bio">{{ bio }}</p>
                     <dl class="meta-list">
                         <div class="meta-row">
                             <dt>NPM</dt>
-                            <dd>2506656910</dd>
+                            <dd>{{ npm }}</dd>
                         </div>
                         <div class="meta-row">
                             <dt>Program</dt>
-                            <dd>S1 Sistem Informasi</dd>
+                            <dd>{{ study_program }}</dd>
                         </div>
                     </dl>
                     <div class="social-links">
-                        <a href="https://github.com/khaylaardiasih " class="social-link">GitHub</a>
-                        <a href="https://www.linkedin.com/in/khayla-syafira-ardiasih-30775b378/" class="social-link">LinkedIn</a>
+                        <a href="https://github.com/khaylaardiasih" class="social-link" target="_blank">GitHub</a>
+                        <a href="https://www.linkedin.com/in/khayla-syafira-ardiasih-30775b378/" class="social-link" target="_blank">LinkedIn</a>
                         <a href="mailto:khaylasyafira08@gmail.com" class="social-link">Email</a>
                     </div>
-                </div>
-            </div>
-        </section>
-
-         <!-- TUGAS 1 : Section Experiences -->
-        <section class="experiences-section" id="experiences">
-            <!-- Tambahan Kreativitas: sparkles pink & gold di background halaman -->
-            <span class="sparkle sparkle-gold sp-9">✦</span>
-            <span class="sparkle sparkle-pink sp-10">✧</span>
-            <span class="sparkle sparkle-gold sp-11">⋆</span>
-            <span class="sparkle sparkle-pink sp-12">✦</span>
-            <span class="sparkle sparkle-pink sp-13">⋆</span>
-            <span class="sparkle sparkle-gold sp-14">✧</span>
-            <span class="sparkle sparkle-pink sp-15">✦</span>
-            <span class="sparkle sparkle-gold sp-16">⋆</span>
-            <div class="container">
-                <!-- Judul di tengah atas -->
-                <div class="section-header">
-                    <h2 class="section-title">Experiences</h2>
-                </div>
-                <!-- 4 kotak berukuran sama -->
-                <div class="experiences-grid">
-                    <!-- kotak 1 -->
-                    <article class="exp-card">
-                        <h3 class="exp-title">Staff of COMPFEST 18, Event Seminar Division</h3>
-                        <p class="exp-year">2026 &ndash; Now</p>
-                        <p class="exp-desc">Researched and approached potential speakers while planning and coordinating seminar programs for COMPFEST 18, Fasilkom UI's annual technology event.</p>
-                    </article>
-                    <!-- kotak 2 -->
-                    <article class="exp-card">
-                        <h3 class="exp-title">Staff of BEM Fasilkom UI, Adkesma Division</h3>
-                        <p class="exp-year">2026 &ndash; Now</p>
-                        <p class="exp-desc"> Supported student advocacy and welfare programs by developing initiatives and providing information to address Fasilkom UI students' needs.</p>
-                    </article>
-                    <!-- kotak 3 -->
-                    <article class="exp-card">
-                        <h3 class="exp-title">High School Short Internship Program</h3>
-                        <p class="exp-year">2024</p>
-                        <p class="exp-desc">Organized and structured coal transportation data to support transportation process documentation.</p>
-                    </article>
-                    <!-- kotak 4 -->
-                    <article class="exp-card">
-                        <h3 class="exp-title">Staff of ICM MUN, Research Division</h3>
-                        <p class="exp-year">2024</p>
-                        <p class="exp-desc">Part of the DISEC Committee, conducting rigorous research on the global proliferation of weaponry and international disarmament efforts, collaborating with the Chair to develop comprehensive research materials and delegate guidebooks.</p>
-                    </article>
                 </div>
             </div>
         </section>
@@ -110,7 +65,7 @@
 
     <footer class="site-footer">
         <div class="container">
-            <p>&copy; 2026 Khayla. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
+            <p>&copy; 2026 {{ name }}. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
         </div>
     </footer>
 </body>
