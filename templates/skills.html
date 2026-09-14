@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skills - {{ name }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navbar tetap di atas saat di-scroll -->
+    <header class="site-header">
+        <div class="container">
+            <a href="{% url 'main:show_main' %}" class="brand">Khayla</a>
+            <nav>
+                <a href="{% url 'main:show_main' %}">Profile</a>
+                <a href="{% url 'main:show_experience' %}">Experiences</a>
+                <a href="{% url 'main:show_skills' %}">Skills</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="skills-section" id="skills">
+            <!-- sparkle pink & gold di background -->
+            <span class="sparkle sparkle-pink sp-9">✦</span>
+            <span class="sparkle sparkle-gold sp-10">✧</span>
+            <span class="sparkle sparkle-gold sp-11">⋆</span>
+            <span class="sparkle sparkle-pink sp-12">✦</span>
+            <span class="sparkle sparkle-pink sp-13">⋆</span>
+            <span class="sparkle sparkle-gold sp-14">✦</span>
+            <span class="sparkle sparkle-gold sp-15">✧</span>
+            <span class="sparkle sparkle-pink sp-16">✧</span>
+
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">SKILLS</h2>
+                </div>
+
+                <!-- Show pesan kosong kalau belum ada data -->
+                {% if not skill_list %}
+                    <p class="empty-state" style="text-align: center; color: var(--text-muted); font-size: 1.1rem; margin: 3rem 0;">
+                        Belum ada keahlian yang ditambahkan.
+                    </p>
+                {% else %}
+                    <!-- Hard Skills (floating 3D icon applications) -->
+                    <div class="skills-group">
+                        <h3 class="skills-subtitle">&mdash; Hard Skills</h3>
+                        <div class="floating-apps-row">
+                            {% for skill in hard_skills %}
+                                <div class="floating-app-item">
+                                    <div class="app-icon-3d" title="{{ skill.name }}">
+                                        {% if skill.logo_url %}
+                                            <img src="{{ skill.logo_url }}" alt="{{ skill.name }}" class="app-logo-img">
+                                        {% else %}
+                                            <span class="app-placeholder-icon">✦</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="app-label">{{ skill.name }}</span>
+                                </div>
+                            {% empty %}
+                                <p class="empty-state" style="color: var(--text-muted);">Belum ada hard skills.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Soft Skills: kotak persegi panjang -->
+                    <div class="skills-group">
+                        <h3 class="skills-subtitle">&mdash; Soft Skills</h3>
+                        <div class="soft-skills-grid">
+                            {% for skill in soft_skills %}
+                                <div class="soft-skill-bar">
+                                    <span class="bar-skill-name">{{ skill.name }}</span>
+                                </div>
+                            {% empty %}
+                                <p class="empty-state" style="color: var(--text-muted);">Belum ada soft skills.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 Khayla. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
+        </div>
+    </footer>
+</body>
+</html>
