@@ -20,7 +20,24 @@ class Experience(models.Model):
     ended_at = models.DateTimeField(blank=True, null=True)
     def __str__(self):
         return self.title
-    
+
     @property
     def is_ongoing(self):
         return self.ended_at is None
+
+class Skill(models.Model):
+    CATEGORY_CHOICES = [
+        ('hard', 'Hard Skills'),
+        ('soft', 'Soft Skills'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100)
+    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES, default='hard')
+    description = models.TextField(blank=True, null=True)
+    proficiency = models.IntegerField(default=80)
+    logo_url = models.URLField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.get_category_display()})"
+    
