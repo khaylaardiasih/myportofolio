@@ -29,3 +29,47 @@ Awalnya, AI mengartikan permintaan "halaman baru" sebagai slider horizontal deng
 
 2. Penyesuaian Estetika dan Ketepatan Desain
 Tampilan awal dari AI masih cukup umum, seperti kotak dengan background putih dan box shadow hitam. Saya kemudian mengubah CSS nya secara manual supaya lebih sesuai dengan desain yang saya mau. Saya membuat background kotak menjadi transparan, menggunakan border pink, menambahkan animasi hover, dan menyesuaikan ukuran font untuk judul, tahun, dan deskripsi.
+
+
+
+### Tugas 2
+
+1. Ketika pengguna membuka halaman `/skills/`, Django pertama menerima permintaan itu
+di `urls.py`. Di sini, Django melihat bahwa path tersebut perlu diteruskan ke aplikasi `main`. Di sini, path `skills/` dicocokkan dengan nama route `show_skills` dan
+Django memanggil fungsi view yang sesuai di `views.py`. View inilah yang bertugas
+"mengambilkan" data dari model (`Skill`) menggunakan Django ORM, lalu memasukkan hasilnya ke dalam `context`. Context tersebut dikirim ke template `skills.html`, yang kemudian memproses data itu menggunakan Django Template Language (perulangan `{% for %}`, kondisi `{% if %}`) dan menghasilkan halaman HTML utuh yang ditampilkan di browser.
+
+2. Kalau data skill saya tulis langsung di HTML, setiap kali saya ingin menambah atau
+mengubah satu skill, saya harus membuka file template dan mengedit kodenya secara manual.
+Ini tidak efisien dan rawan salah, apalagi kalau datanya sudah banyak. Dengan menyimpan
+data di model dan database, saya bisa mengelola skill lewat Django shell atau admin panel
+tanpa harus menyentuh kode HTML sama sekali. Ini juga berarti kalau suatu saat saya mau
+menampilkan data skill di halaman lain atau dalam format yang berbeda, saya tinggal
+panggil model yang sama tanpa perlu menyalin-tempel data secara manual.
+
+3. `makemigrations` bertugas membaca perubahan yang saya buat di `models.py` dan
+menghasilkan file instruksi migrasi (misalnya `0002_skill.py`), tapi belum mengubah
+databasenya. Sedangkan `migrate` yang benar-benar menerapkan instruksi itu ke database.
+Jadi keduanya harus dijalankan secara berurutan. Contoh yang saya alami sendiri di tugas
+ini: saya awalnya membuat model `Skill` tanpa field `logo_url`, lalu menjalankan
+`makemigrations` dan `migrate`. Setelah itu saya menambahkan field `logo_url` ke model,
+sehingga saya harus menjalankan `makemigrations` lagi (menghasilkan `0003_skill_logo_url.py`)
+dan `migrate` lagi agar kolom `logo_url` benar-benar terbentuk di database.
+
+## AI Disclosure & Analisis Kritis Keterbatasan AI 
+Dalam pengerjaan tugas ini, saya menggunakan bantuan AI untuk membantu merancang struktur
+halaman Skills dan menerjemahkan sketsa visual yang saya buat ke dalam kode.
+
+Tools yang Digunakan: Google Antigravity
+
+Bagian yang Dibantu AI:
+1. Membantu merancang struktur model `Skill` dengan pemisahan kategori hard dan soft skills.
+2. Memberikan referensi kode CSS untuk efek 3D, animasi melayang (`@keyframes`), dan swipe pada deretan ikon aplikasi.
+3. Membantu menyusun kerangka unit test untuk menguji URL, template, data, dan kondisi kosong.
+
+Analisis Kritis Keterbatasan AI & Perbaikan Manual:
+1. Penerjemahan Desain dari Sketsa
+Ketika saya mengunggah sketsa halaman Skills, AI awalnya menyarankan layout kartu biasa seperti halaman Experience. Padahal maksud saya berbeda. Saya mengarahkan ulang AI secara spesifik dan akhirnya mendapat kode CSS dengan `border-radius` squircle, multi-layer `box-shadow`, dan `@keyframes floatingApp` yang sesuai dengan visi saya.
+
+2. Penyesuaian Scroll dan Layout Responsif
+Saat jumlah ikon Hard Skills bertambah (Java, Python, Canva, CapCut, HTML & CSS, Word, Excel), tampilan sempat berantakan karena ikon meluber ke bawah. AI tidak langsung menyarankan solusi yang tepat. Saya akhirnya menambahkan `flex-wrap: nowrap`,`overflow-x: auto`, dan `flex-shrink: 0` sendiri setelah memahami masalahnya, lalu juga menambahkan custom scrollbar pink agar tampilannya tetap konsisten dengan portofolio saya.
