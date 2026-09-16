@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block meta %}
+    <title>Add Skill - {{ name }}</title>
+{% endblock meta %}
+
+{% block content %}
+    <main>
+        <section class="form-section">
+            <div class="container" style="max-width: 600px; margin: 2rem auto; padding: 0 1rem;">
+                <h1 style="margin-bottom: 1.5rem;">Tambah Keahlian Baru</h1>
+                <form method="post" action="{% url 'main:create_skill' %}" class="skill-form">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% for error in field.errors %}
+                                <p class="form-error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem;">
+                        <button type="submit" class="button">Simpan Keahlian</button>
+                        <a href="{% url 'main:show_skills' %}" class="button button-secondary">Batal</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+{% endblock content %}

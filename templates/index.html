@@ -1,73 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends 'base.html' %}
+
+{% block meta %}
     <title>{{ name }} - Portofolio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css?v=2">
-</head>
-<body>
-    <header class="site-header">
-        <div class="container">
-            <a href="{% url 'main:show_main' %}" class="brand">Khayla</a>
-            <nav>
-                <a href="{% url 'main:show_main' %}">Profile</a>
-                <a href="{% url 'main:show_experience' %}">Experience</a>
-                <a href="{% url 'main:show_skills' %}">Skills</a>
-            </nav>
-        </div>
-    </header>
+{% endblock meta %}
 
-    <main>
-        <section class="hero" id="profile">
-            <!-- Tambahan Kreativitas: sparkles pink & gold di background halaman -->
-            <span class="sparkle sparkle-pink sp-1">✦</span>
-            <span class="sparkle sparkle-gold sp-2">✧</span>
-            <span class="sparkle sparkle-gold sp-3">⋆</span>
-            <span class="sparkle sparkle-pink sp-4">✦</span>
-            <span class="sparkle sparkle-pink sp-5">⋆</span>
-            <span class="sparkle sparkle-gold sp-6">✦</span>
-            <span class="sparkle sparkle-gold sp-7">✧</span>
-            <span class="sparkle sparkle-pink sp-8">✧</span>
+{% block content %}
+<main>
+    <section class="hero" id="profile">
+        <span class="sparkle sparkle-pink sp-1">✦</span>
+        <span class="sparkle sparkle-gold sp-2">✧</span>
+        <span class="sparkle sparkle-gold sp-3">⋆</span>
+        <span class="sparkle sparkle-pink sp-4">✦</span>
+        <span class="sparkle sparkle-pink sp-5">⋆</span>
+        <span class="sparkle sparkle-gold sp-6">✦</span>
+        <span class="sparkle sparkle-gold sp-7">✧</span>
+        <span class="sparkle sparkle-pink sp-8">✧</span>
 
-            <div class="container hero-grid">
-                <div class="hero-identity">
-                    <p class="role-tag">Information Systems &middot; Universitas Indonesia</p>
-                    <h1>{{ name }}</h1>
-                </div>
-                <div class="hero-photo">
-                    <div class="photo-block"></div>
-                    <img class="avatar" src="/static/img/ProfilePBP.png" alt="Photo of {{ name }}">
-                </div>
-                <div class="hero-details">
-                    <p class="bio">{{ bio }}</p>
-                    <dl class="meta-list">
-                        <div class="meta-row">
-                            <dt>NPM</dt>
-                            <dd>{{ npm }}</dd>
-                        </div>
-                        <div class="meta-row">
-                            <dt>Program</dt>
-                            <dd>{{ study_program }}</dd>
-                        </div>
-                    </dl>
-                    <div class="social-links">
-                        <a href="https://github.com/khaylaardiasih" class="social-link" target="_blank">GitHub</a>
-                        <a href="https://www.linkedin.com/in/khayla-syafira-ardiasih-30775b378/" class="social-link" target="_blank">LinkedIn</a>
-                        <a href="mailto:khaylasyafira08@gmail.com" class="social-link">Email</a>
+        <div class="container hero-grid">
+            <div class="hero-identity">
+                <p class="role-tag">Information Systems &middot; Universitas Indonesia</p>
+                <h1>{{ name }}</h1>
+            </div>
+            <div class="hero-photo">
+                <div class="photo-block"></div>
+                <img class="avatar" src="/static/img/ProfilePBP.png" alt="Photo of {{ name }}">
+            </div>
+            <div class="hero-details">
+                <p class="bio">{{ bio }}</p>
+                <dl class="meta-list">
+                    <div class="meta-row">
+                        <dt>NPM</dt>
+                        <dd>{{ npm }}</dd>
                     </div>
+                    <div class="meta-row">
+                        <dt>Program</dt>
+                        <dd>{{ study_program }}</dd>
+                    </div>
+                </dl>
+                <div class="social-links">
+                    <a href="https://github.com/khaylaardiasih" class="social-link" target="_blank">GitHub</a>
+                    <a href="https://www.linkedin.com/in/khayla-syafira-ardiasih-30775b378/" class="social-link" target="_blank">LinkedIn</a>
+                    <a href="mailto:khaylasyafira08@gmail.com" class="social-link">Email</a>
                 </div>
             </div>
-        </section>
-    </main>
-
-    <footer class="site-footer">
-        <div class="container">
-            <p>&copy; 2026 Khayla. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
         </div>
-    </footer>
-</body>
-</html>
+    </section>
+</main>
+{% endblock content %}

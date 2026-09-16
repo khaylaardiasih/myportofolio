@@ -149,3 +149,10 @@ WHITENOISE_USE_FINDERS = True
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# CSRF configuration
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost",
+    "http://127.0.0.1",
+    "https://*.pbp.cs.ui.ac.id", # jika kamu sudah deploy ke PWS
+]

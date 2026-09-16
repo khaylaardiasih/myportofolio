@@ -565,3 +565,260 @@ h1, .brand, .section-title, .exp-title { /* Menambahkan .section-title & .exp-ti
         gap: 0.85rem;
     }
 }
+
+/* Tutorial 3 */
+.skill-form {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: 700;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.7rem;
+    border: 1px solid var(--accent, #ea5a8c);
+    border-radius: var(--radius, 8px);
+    font: inherit;
+    transition: border-color 0.2s ease, outline-color 0.2s ease;
+    background: #fff;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: 2px solid var(--accent, #ea5a8c);
+    border-color: var(--accent, #ea5a8c);
+}
+
+.form-error {
+    color: #b42318;
+    font-size: 0.85rem;
+    margin-top: 0.35rem;
+}
+
+.button {
+    display: inline-block;
+    height: fit-content;
+    border: 0;
+    border-radius: var(--radius, 8px);
+    padding: 0.65rem 1rem;
+    background: var(--accent, #ea5a8c);
+    color: white;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.button-secondary {
+    background: var(--ink, #333);
+}
+
+.button-secondary:hover {
+    opacity: 0.9;
+}
+
+/* Header & Search Bar Tutorial 3 */
+.skill-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.skill-add-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.skill-search {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.skill-search__input {
+    width: 100%;
+    min-width: 0;
+    padding: 0.7rem;
+    border: 1px solid var(--line, #e2e8f0);
+    border-radius: var(--radius, 8px);
+    background: #fff;
+    color: var(--ink, #333);
+    font: inherit;
+}
+
+.skill-search__input:focus {
+    outline: 2px solid var(--accent, #ea5a8c);
+    border-color: var(--accent, #ea5a8c);
+}
+
+/* Tombol Hapus */
+.delete-icon-btn {
+    display: none !important; /* hidden */
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #ef4444; 
+    color: #ffffff;            
+    border: 2px solid #ffffff; 
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 20;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.45);
+    transition: transform 0.15s ease, background-color 0.15s ease;
+    padding: 0;
+}
+
+/* Efek saat tombol merah diarahkan kursor (hover) */
+.delete-icon-btn:hover {
+    background-color: #dc2626; 
+    transform: scale(1.2);
+}
+
+/* Posisi rapi untuk tombol di Soft Skills Bar */
+.soft-skill-bar .delete-icon-btn {
+    position: static;
+    margin-left: auto;
+}
+
+/* Tampilkan tanda silang HANYA jika class 'edit-mode' aktif */
+.edit-mode .delete-icon-btn {
+    display: flex !important;
+    animation: popBadge 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes popBadge {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Tombol 'Kelola Keahlian' */
+.button-outline {
+    background: transparent;
+    border: 2px solid var(--accent, #ea5a8c);
+    color: var(--accent, #ea5a8c);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.button-outline:hover {
+    background: rgba(234, 90, 140, 0.1);
+}
+
+.button-active {
+    background: var(--accent, #ea5a8c) !important;
+    color: white !important;
+}
+
+.delete-icon-btn:hover {
+    background: #dc2626;
+    transform: scale(1.2);
+}
+
+.button-danger {
+    background: #b42318;
+    color: white;
+}
+
+.button-danger:hover {
+    background: #912018;
+}
+
+/* Modal Popover */
+.skill-delete-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 1rem;
+    border: 0;
+    background: transparent;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.skill-delete-modal:popover-open {
+    display: flex;
+}
+
+.skill-delete-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    padding: 0;
+    background: rgba(28, 25, 23, 0.58);
+    cursor: default;
+}
+
+.skill-delete-modal__content {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 420px);
+    padding: 1.5rem;
+    background: #fff;
+    border: 1px solid var(--line, #e2e8f0);
+    border-radius: var(--radius, 12px);
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.25);
+    color: var(--ink, #333);
+}
+
+.skill-delete-modal__content h3 {
+    margin: 0 0 0.75rem;
+    font-size: 1.35rem;
+}
+
+.skill-delete-modal__close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: #888;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.skill-delete-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
