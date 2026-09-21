@@ -73,3 +73,47 @@ Ketika saya mengunggah sketsa halaman Skills, AI awalnya menyarankan layout kart
 
 2. Penyesuaian Scroll dan Layout Responsif
 Saat jumlah ikon Hard Skills bertambah (Java, Python, Canva, CapCut, HTML & CSS, Word, Excel), tampilan sempat berantakan karena ikon meluber ke bawah. AI tidak langsung menyarankan solusi yang tepat. Saya akhirnya menambahkan `flex-wrap: nowrap`,`overflow-x: auto`, dan `flex-shrink: 0` sendiri setelah memahami masalahnya, lalu juga menambahkan custom scrollbar pink agar tampilannya tetap konsisten dengan portofolio saya.
+
+
+### Tugas 3
+
+1.  
+    - `ModelForm` vs Form Manual:
+    - Prinsip DRY: `ModelForm` otomatis membuat elemen input dan validasi berdasarkan definisi model (`Skill`) tanpa perlu menulis tag HTML berulang.
+    - Validasi & Keamanan: Menyediakan validasi tipe data dan sanitasi input otomatis melalui `form.is_valid()`.
+    - Penyimpanan Cepat: Data langsung tersimpan ke database cukup dengan memanggil `form.save()`.
+    
+    Mengapa diwajibkan untuk menambahkan `{% csrf_token %}`?
+    Melindungi aplikasi dari serangan Cross-Site Request Forgery (CSRF) dengan memastikan request POST benar-benar berasal dari pengguna di form situs kita, bukan manipulasi dari situs berbahaya pihak ketiga. Tanpa token ini, Django otomatis menolak request dengan error 403 Forbidden.
+
+2. 
+   - Lebih Ringkas & Cepat: Format JSON tidak memiliki tag penutup redundan seperti XML, sehingga ukuran data (payload) lebih kecil dan hemat bandwidth jaringan.
+   - Dukungan Natif JavaScript: JSON berbasis sintaks JavaScript sehingga dapat di-parse langsung oleh browser (`JSON.parse()`) tanpa memerlukan XML DOM parser yang berat.
+   - Pemetaan Data Intuitif: Struktur key-value dan array pada JSON selaras langsung dengan struktur data umum pemrograman modern (seperti `dict` dan `list` pada python).
+
+3. 
+   - Alur View Mengembalikan JSON:
+     1. Klien mengirim HTTP GET request ke URL endpoint `/api/skills/`.
+     2. Django memanggil fungsi view `get_skills_json(request)`.
+     3. View mengambil data dari database via Django ORM (`Skill.objects.all()`), menghasilkan QuerySet objek Python.
+     4. QuerySet diubah menjadi string JSON melalui `serializers.serialize("json", skills)`.
+     5. View mengembalikan response berupa `HttpResponse(skills_json, content_type="application/json")`.
+
+   - Pentingnya Serialisasi:
+     Objek model Django adalah objek Python internal yang tidak bisa langsung ditransfer melalui protokol HTTP atau dibaca oleh browser. Serialisasi berfungsi menerjemahkan objek Python tersebut menjadi format teks standar (JSON) yang universal agar dapat dimengerti dan diproses oleh klien apa pun.
+
+## AI Disclosure & Analisis Kritis Keterbatasan AI
+
+Dalam pengerjaan tugas ini, sebagian besar implementasi logika, perancangan template, penataan gaya CSS, dan alur CRUD (sekitar 80%) saya kerjakan secara mandiri. AI hanya saya gunakan sebagai asisten referensi untuk verifikasi sintaks dan konsultasi teknis.
+
+Tools yang Digunakan: ChatGPT
+
+Bagian yang Dibantu AI:
+1. Memberikan referensi sintaks penggunaan parameter `instance` pada `ModelForm` untuk fungsi update di `views.py`.
+2. Memberikan referensi metode assertion standar pada Django TestCase untuk pengujian view dan endpoint JSON.
+
+1. Kesalahan Layout dan Penataan Tombol CSS:
+   AI memberi saran yang menyebabkan tombol edit dan hapus bertumpukan di pojok kotak Hard Skills karena properti 'position: absolute'. Saya menganalisis masalah CSS tersebut dan merombak ulang penataan tombolnya secara mandiri agar rapi, sejajar, dan selaras dengan estetika portofolio saya.
+   
+2. Pencegahan Redundansi Kode Template (Prinsip DRY):
+   AI sempat mengusulkan pembuatan file HTML terpisah untuk form edit. Saya menolak pendekatan tersebut karena tidak efisien, lalu saya merancang sendiri template `skills_form.html` agar bersifat modular dan dinamis sehingga dapat menangani proses Create maupun Update dalam satu berkas.
