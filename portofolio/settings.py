@@ -155,4 +155,5 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost",
     "http://127.0.0.1",
     "https://*.pbp.cs.ui.ac.id", # jika kamu sudah deploy ke PWS
+    "https://*.pws.cs.ui.ac.id",
 ]
