@@ -1,16 +1,24 @@
 {% extends "base.html" %}
 
 {% block meta %}
-    <title>Add Skill - {{ name }}</title>
+    <!-- Judul tab browser dinamis: edit jika mode ubah, add jika mode tambah -->
+    <title>{% if is_edit %}Edit Skill - {{ skill.name }}{% else %}Add Skill{% endif %} - {{ name }}</title>
 {% endblock meta %}
 
 {% block content %}
     <main>
         <section class="form-section">
             <div class="container" style="max-width: 600px; margin: 2rem auto; padding: 0 1rem;">
-                <h1 style="margin-bottom: 1.5rem;">Tambah Keahlian Baru</h1>
-                <form method="post" action="{% url 'main:create_skill' %}" class="skill-form">
+                <!-- Header form menyesuaikan status penambahan atau pengubahan -->
+                <h1 style="margin-bottom: 1.5rem;">
+                    {% if is_edit %}Ubah Keahlian: {{ skill.name }}{% else %}Tambah Keahlian Baru{% endif %}
+                </h1>
+
+                <!-- Atribut action sengaja dikosongkan agar otomatis POST ke URL halaman aktif -->
+                <form method="post" class="skill-form">
                     {% csrf_token %}
+
+                    <!-- Render setiap field input dari ModelForm beserta error jika tidak valid -->
                     {% for field in form %}
                         <div class="form-group">
                             <label for="{{ field.id_for_label }}">{{ field.label }}</label>
@@ -20,8 +28,13 @@
                             {% endfor %}
                         </div>
                     {% endfor %}
+
                     <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem;">
-                        <button type="submit" class="button">Simpan Keahlian</button>
+                        <!-- Tombol submit dinamis sesuai mode operasi -->
+                        <button type="submit" class="button">
+                            {% if is_edit %}Simpan Perubahan{% else %}Simpan Keahlian{% endif %}
+                        </button>
+                        <!-- Tombol batal untuk kembali ke daftar skill -->
                         <a href="{% url 'main:show_skills' %}" class="button button-secondary">Batal</a>
                     </div>
                 </form>
