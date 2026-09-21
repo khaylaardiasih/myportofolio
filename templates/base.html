@@ -22,6 +22,30 @@
     </div>
   </header>
 
+<!-- Kreativitas Tugas 3: Floating Toast Notifications untuk Messages -->
+  {% if messages %}
+    <div id="toast-container" class="toast-container">
+      {% for message in messages %}
+        <div class="toast toast-{{ message.tags }}">
+          <span class="toast-icon">✦</span>
+          <span class="toast-text">{{ message }}</span>
+          <button type="button" class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Menutup toast setelah 3.5 detik -->
+    <script>
+      setTimeout(() => {
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(t => {
+          t.style.animation = 'toastFadeOut 0.4s ease forwards';
+          setTimeout(() => t.remove(), 400);
+        });
+      }, 3500);
+    </script>
+  {% endif %}
+
   {% block content %} {% endblock content %}
 
   <footer class="site-footer">
