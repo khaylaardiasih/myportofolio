@@ -47,8 +47,12 @@ def create_skill(request):
     form = SkillForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "Keahlian baru berhasil ditambahkan!")
+        # Simpan skill baru ke database
+        skill = form.save()
+
+        # Deteksi jenis kategori untuk notifikasi
+        cat_label = "Hard Skill" if skill.category == "hard" else "Soft Skill"
+        messages.success(request, f"{cat_label} '{skill.name}' berhasil ditambahkan!")
         return redirect("main:show_skills")
 
     context = {
@@ -69,9 +73,11 @@ def update_skill(request, skill_id):
     # Validasi apakah metode request adalah POST dan seluruh field form memenuhi aturan validasi model
     if request.method == "POST" and form.is_valid():
         # Menyimpan perubahan data ke database
-        form.save()
+        skill = form.save()
+        # Deteksi jenis kategori untuk notifikasi
+        cat_label = "Hard Skill" if skill.category == "hard" else "Soft Skill"
         # Pesan sukses untuk memberi tahu pengguna bahwa skill berhasil di update
-        messages.success(request, f"Keahlian '{skill.name}' berhasil diperbarui!")
+        messages.success(request, f"{cat_label} '{skill.name}' berhasil di-update!")
         return redirect("main:show_skills")
 
     context = {
@@ -97,8 +103,11 @@ def delete_skill(request, skill_id):
     skill = get_object_or_404(Skill, pk=skill_id)
 
     if request.method == "POST":
+        # Simpan nama & kategori sebelum dihapus dari database
+        cat_label = "Hard Skill" if skill.category == "hard" else "Soft Skill"
+        skill_name = skill.name
         skill.delete()
-        messages.success(request, f"Keahlian {skill.name} berhasil dihapus!")
+        messages.success(request, f"{cat_label} '{skill_name}' berhasil dihapus!")
         return redirect("main:show_skills")
 
     return redirect("main:show_skills")
