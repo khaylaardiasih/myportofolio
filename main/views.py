@@ -57,6 +57,32 @@ def create_skill(request):
     }
     return render(request, "skills_form.html", context)
 
+# Tugas 3
+def update_skill(request, skill_id):
+    # Mengambil skill; jika ID tidak ditemukan, otomatis kembalikan error 404
+    skill = get_object_or_404(Skill, pk=skill_id)
+
+    # Jika request berupa POST, form diisi data baru (request.POST).
+    # Jika request berupa GET, form otomatis menampilkan data lama dari 'instance=skill'.
+    form = SkillForm(request.POST or None, instance=skill)
+
+    # Validasi apakah metode request adalah POST dan seluruh field form memenuhi aturan validasi model
+    if request.method == "POST" and form.is_valid():
+        # Menyimpan perubahan data ke database
+        form.save()
+        # Pesan sukses untuk memberi tahu pengguna bahwa skill berhasil di update
+        messages.success(request, f"Keahlian '{skill.name}' berhasil diperbarui!")
+        return redirect("main:show_skills")
+
+    context = {
+        "name": "Khayla Syafira Ardiasih", 
+        "form": form,                      
+        "skill": skill,                    
+        "is_edit": True,                    
+    }
+    
+    return render(request, "skills_form.html", context)
+
 def get_skills_json(request):
     search_query = request.GET.get("name", "").strip()
     skills = Skill.objects.all()
