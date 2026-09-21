@@ -95,3 +95,54 @@ class MainTest(TestCase):
         response = self.client.get(reverse("main:show_skills"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Belum ada keahlian yang ditambahkan.")
+
+    def test_create_skill(self):
+        """Memastikan new skill dapat ditambahkan lewat POST request"""
+        response = self.client.post(reverse("main:create_skill"), {
+            "name": "Django Framework",
+            "category": "hard",
+            "description": "Pengembangan web dengan Django",
+            "proficiency": 85,
+            "logo_url": "https://example.com/django.png",
+        })
+        # Berhasil redirect setelah simpan
+        self.assertEqual(response.status_code, 302)
+        # Berhasil tersimpan di database
+        self.assertTrue(Skill.objects.filter(name="Django Framework").exists())
+
+    def test_update_skill(self):
+        """Memastikan data keahlian yang ada dapat di update"""
+        response = self.client.post(
+            reverse("main:update_skill", args=[self.hard_skill.id]),
+            {
+                "name": "Python Advanced",
+                "category": "hard",
+                "description": "Pemrograman Python tingkat lanjut",
+                "proficiency": 95,
+                "logo_url": "",
+            }
+        )
+        # Berhasil redirect ke halaman skills
+        self.assertEqual(response.status_code, 302)
+        # Mengambil data terbaru dari database
+        self.hard_skill.refresh_from_db()
+        self.assertEqual(self.hard_skill.name, "Python Advanced")
+        self.assertEqual(self.hard_skill.proficiency, 95)
+
+    def test_delete_skill(self):
+        """Memastikan data keahlian dapat dihapus dari database"""
+        response = self.client.post(
+            reverse("main:delete_skill", args=[self.hard_skill.id])
+        )
+        self.assertEqual(response.status_code, 302)
+        # Objek sudah tidak ada lagi di database
+        self.assertFalse(Skill.objects.filter(id=self.hard_skill.id).exists())
+
+    def test_get_skills_json(self):
+        """Memastikan endpoint API mengembalikan data dalam format JSON yang valid"""
+        response = self.client.get(reverse("main:get_skills_json"))
+        self.assertEqual(response.status_code, 200)
+        # Header response harus berupa application/json
+        self.assertEqual(response["Content-Type"], "application/json")
+        # Memastikan data skill yang dibuat di setUp termuat di dalam payload JSON
+        self.assertContains(response, "Python")
