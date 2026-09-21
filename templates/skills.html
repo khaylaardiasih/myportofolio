@@ -55,13 +55,26 @@
                         </p>
                     {% endif %}
                 {% else %}
+                
                     <!-- Hard Skills -->
                     <div class="skills-group">
                         <h3 class="skills-subtitle">&mdash; Hard Skills</h3>
                         <div class="floating-apps-row">
                             {% for skill in hard_skills %}
                                 <div class="floating-app-item" style="position: relative;">
-                                    {% include "components/skill_delete_modal.html" with skill=skill %}
+                                    <!-- Aksi tombol edit dan hapus berdampingan -->
+                                    <div class="skill-item-actions">
+                                        <!-- Tombol ubah keahlian -->
+                                        <a href="{% url 'main:update_skill' skill.id %}"
+                                           class="edit-icon-btn"
+                                           title="Ubah {{ skill.name }}"
+                                           aria-label="Ubah {{ skill.name }}">
+                                            ✎
+                                        </a>
+                                        <!-- Modal konfirmasi hapus -->
+                                        {% include "components/skill_delete_modal.html" with skill=skill %}
+                                    </div>
+
                                     <div class="app-icon-3d" title="{{ skill.name }}">
                                         {% if skill.logo_url %}
                                             <img src="{{ skill.logo_url }}" alt="{{ skill.name }}" class="app-logo-img">
@@ -82,9 +95,18 @@
                         <h3 class="skills-subtitle">&mdash; Soft Skills</h3>
                         <div class="soft-skills-grid">
                             {% for skill in soft_skills %}
-                                <div class="soft-skill-bar" style="position: relative; display: flex; justify-content: space-between; align-items: center; padding-right: 2.5rem;">
+                                <div class="soft-skill-bar" style="position: relative; display: flex; justify-content: space-between; align-items: center; padding-right: 4.5rem;">
                                     <span class="bar-skill-name">{{ skill.name }}</span>
-                                    <div style="position: absolute; right: 0.75rem;">
+                                    <!-- Aksi tombol edit dan hapus di sisi kanan bar -->
+                                    <div class="soft-skill-actions" style="position: absolute; right: 0.75rem; display: flex; gap: 0.35rem; align-items: center;">
+                                        <!-- Tombol ubah keahlian -->
+                                        <a href="{% url 'main:update_skill' skill.id %}"
+                                           class="edit-icon-btn"
+                                           title="Ubah {{ skill.name }}"
+                                           aria-label="Ubah {{ skill.name }}">
+                                            ✎
+                                        </a>
+                                        <!-- Modal konfirmasi hapus -->
                                         {% include "components/skill_delete_modal.html" with skill=skill %}
                                     </div>
                                 </div>
