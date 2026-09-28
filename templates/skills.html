@@ -28,9 +28,11 @@
                             </a>
                         {% endif %}
                         <!-- Tombol Toggle Mode Edit / Hapus -->
+                         {% if user.is_superuser or is_editor %}
                         <button type="button" id="toggle-manage-btn" class="button button-outline">
                             Kelola Keahlian
                         </button>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -66,17 +68,20 @@
                                 <div class="floating-app-item" style="position: relative;">
                                     <!-- Aksi tombol edit dan hapus berdampingan -->
                                     <div class="skill-item-actions">
-                                        <!-- Tombol ubah keahlian -->
-                                    {% if user.is_superuser %}
-                                        <a href="{% url 'main:update_skill' skill.id %}"
-                                        class="edit-icon-btn"
-                                        title="Ubah {{ skill.name }}"
-                                        aria-label="Ubah {{ skill.name }}">
-                                            ✎
-                                        </a>
-                                        <!-- Modal konfirmasi hapus -->
-                                        {% include "components/skill_delete_modal.html" with skill=skill %}
-                                     {% endif %}
+                                        {# Tombol ubah keahlian: dapat dilihat oleh Superuser dan Editor #}
+                                        {% if user.is_superuser or is_editor %}
+                                            <a href="{% url 'main:update_skill' skill.id %}"
+                                            class="edit-icon-btn"
+                                            title="Ubah {{ skill.name }}"
+                                            aria-label="Ubah {{ skill.name }}">
+                                                ✎
+                                            </a>
+                                        {% endif %}
+
+                                        {# Tombol hapus keahlian: hanya dapat dilihat oleh Superuser #}
+                                        {% if user.is_superuser %}
+                                            {% include "components/skill_delete_modal.html" with skill=skill %}
+                                        {% endif %}
                                     </div>
 
                                     <div class="app-icon-3d" title="{{ skill.name }}">
@@ -107,17 +112,21 @@
                                     <div style="display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0;">
                                         {% include "components/skill_star.html" with skill=skill %}
                                         
-                                        {% if user.is_superuser %}
+                                        {# Bungkus edit dan hapus sesuai hak akses pengguna #}
+                                        {% if user.is_superuser or is_editor %}
                                             <div class="soft-skill-actions" style="display: flex; gap: 0.35rem; align-items: center;">
-                                                <!-- Tombol ubah keahlian -->
+                                                {# Tombol ubah keahlian: dapat diakses Superuser dan Editor #}
                                                 <a href="{% url 'main:update_skill' skill.id %}"
                                                 class="edit-icon-btn"
                                                 title="Ubah {{ skill.name }}"
                                                 aria-label="Ubah {{ skill.name }}">
                                                     ✎
                                                 </a>
-                                                <!-- Modal konfirmasi hapus -->
-                                                {% include "components/skill_delete_modal.html" with skill=skill %}
+
+                                                {# Tombol hapus keahlian: hanya untuk Superuser #}
+                                                {% if user.is_superuser %}
+                                                    {% include "components/skill_delete_modal.html" with skill=skill %}
+                                                {% endif %}
                                             </div>
                                         {% endif %}
                                     </div>
