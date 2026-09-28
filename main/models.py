@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.contrib.auth.models import User
 
 class Experience(models.Model):
     EXPERIENCE_CHOICES = [
@@ -37,6 +38,8 @@ class Skill(models.Model):
     description = models.TextField(blank=True, null=True)
     proficiency = models.IntegerField(default=80)
     logo_url = models.URLField(blank=True, null=True)
+    starred_by = models.ManyToManyField(
+        User, related_name="starred_skills", blank=True )
 
     def __str__(self):
         return f"{self.name} ({self.get_category_display()})"
