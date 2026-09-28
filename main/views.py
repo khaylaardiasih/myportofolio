@@ -79,7 +79,8 @@ def create_skill(request):
 # Tugas 3
 @login_required(login_url="/login/")
 def update_skill(request, skill_id):
-    if not request.user.is_superuser:
+    # Izinkan jika superuser atau editor
+    if not (request.user.is_superuser or is_editor_user(request.user)):
         raise PermissionDenied
 
     # Mengambil skill; jika ID tidak ditemukan, otomatis kembalikan error 404
