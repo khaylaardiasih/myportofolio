@@ -41,12 +41,16 @@ def show_skills(request):
     skills = [skill.object for skill in skills]
     search_query = request.GET.get("name", "").strip()
 
+     # Periksa status editor pengguna untuk pengaturan tampilan UI di template
+    is_editor = is_editor_user(request.user)
+
     context = {
         "name": "Khayla Syafira Ardiasih",
         "skill_list": skills,
         "hard_skills": [s for s in skills if s.category == "hard"],
         "soft_skills": [s for s in skills if s.category == "soft"],
         "search_query": search_query,
+        "is_editor": is_editor,
     }
     return render(request, "skills.html", context)
 
@@ -180,3 +184,9 @@ def toggle_star(request, skill_id):
             skill.starred_by.add(request.user)
 
     return redirect("main:show_skills")
+
+def is_editor_user(user):
+    # Cek apakah user sudah login dan terdaftar di grup 'Editor' atau punya izin edit skill
+    return user.is_authenticated and (
+        user.groups.filter(name="Editor").exists() or user.has_perm("main.change_skill")
+    )
