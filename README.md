@@ -117,3 +117,25 @@ Bagian yang Dibantu AI:
    
 2. Pencegahan Redundansi Kode Template (Prinsip DRY):
    AI sempat mengusulkan pembuatan file HTML terpisah untuk form edit. Saya menolak pendekatan tersebut karena tidak efisien, lalu saya merancang sendiri template `skills_form.html` agar bersifat modular dan dinamis sehingga dapat menangani proses Create maupun Update dalam satu berkas.
+
+### Tugas 4
+
+## AI Disclosure & Analisis Kritis
+
+Dalam pengerjaan Tugas 4 ini, saya menggunakan AI untuk konsultasi teknis, verifikasi arsitektur otorisasi Django, serta penyusunan skenario pengujian otomatis.
+
+Tools yang Digunakan: ChatGPT
+
+Bagian yang Dibantu AI:
+1. Memberikan referensi pola perancangan helper function untuk mendeteksi keanggotaan pengguna dalam Django `Group` secara efisien (`user.groups.filter(name='Editor').exists()`).
+2. Membantu merancang kerangka unit test komprehensif pada `main/tests.py` untuk memverifikasi perilaku server (status respon HTTP 302, 403, dan perubahan database) untuk keempat peran pengguna serta fitur star.
+
+Analisis Kritis Keterbatasan AI & Perbaikan Manual:
+1. Kesalahan Konseptual Penggabungan Blok Logika Template:
+   Pada awalnya, AI menyarankan untuk membungkus seluruh blok aksi (tombol edit dan tombol hapus) di dalam satu if else `{% if user.is_superuser or is_editor %}`. Namun, hal ini akan menyebabkan tombol hapus ikut terlihat oleh peran Editor, yang melanggar spesifikasi tugas. Saya menganalisis masalah ini dan memperbaikinya secara manual dengan memisahkan if else kedua tombol: tombol ubah (pensil ✎) dapat diakses oleh `user.is_superuser or is_editor`, sedangkan tombol hapus tetap diproteksi secara eksklusif hanya untuk `user.is_superuser`.
+
+2. Kegagalan Deteksi Status Login pada Unit Test Lama:
+   Ketika menambahkan unit test baru, unit test lama dari Tugas 3 (`test_create_skill`, `test_update_skill`, `test_delete_skill`) mengalami kegagalan (AssertionError) karena AI awalnya tidak memperhitungkan bahwa view tersebut kini telah diproteksi oleh `@login_required` dan `PermissionDenied`. Saya memperbaikinya dengan memperbarui method `setUp` dan menambahkan baris `self.client.login` pada test lama agar login sebagai superuser sebelum mengeksekusi operasi CRUD.
+
+3. Penyempurnaan Antarmuka 'Kelola Keahlian':
+   AI sempat membiarkan tombol toggle 'Kelola Keahlian' tampil untuk semua pengguna termasuk pengunjung biasa. Oleh karena itu, saya menambahkan pengkondisian agar tombol tersebut hanya muncul bagi peran yang memiliki hak modifikasi (Superuser dan Editor), sehingga pengunjung dan pengguna reguler mendapatkan tampilan yang bersih dan bebas dari kontrol yang tidak relevan.
