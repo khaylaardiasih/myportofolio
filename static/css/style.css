@@ -961,3 +961,38 @@ h1, .brand, .section-title, .exp-title { /* Menambahkan .section-title & .exp-ti
     background: rgba(255, 255, 255, 0.25);
     font-size: 0.8rem;
 }
+
+/*Kreativitas Tugas 4: Role Badges di Navbar --- */
+
+.nav-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+}
+
+.role-badge {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.badge-owner {
+    background-color: var(--accent);
+    color: var(--paper);
+    box-shadow: 0 0 8px rgba(255, 105, 180, 0.4);
+}
+
+.badge-editor {
+    background-color: #7b2cbf;
+    color: #ffffff;
+}
+
+.badge-member {
+    background-color: var(--card-bg, #2b2b2b);
+    color: var(--text-muted, #aaa);
+    border: 1px solid var(--border-color, #444);
+}

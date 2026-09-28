@@ -181,8 +181,10 @@ def toggle_star(request, skill_id):
     if request.method == "POST":
         if request.user in skill.starred_by.all():
             skill.starred_by.remove(request.user)
+            messages.info(request, f"Batal menyukai keahlian '{skill.name}'.")
         else:
             skill.starred_by.add(request.user)
+            messages.success(request, f"Berhasil memberikan star pada '{skill.name}'! ✦")
 
     return redirect("main:show_skills")
 
