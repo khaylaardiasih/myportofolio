@@ -6,6 +6,8 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.http import require_POST
 from main.forms import SkillForm
 from main.models import Experience, Skill
 import datetime
@@ -32,25 +34,14 @@ def show_experience(request):
     return render(request, "experience.html", context)
 
 def show_skills(request):
-    json_response = get_skills_json(request)
-
-    skills = serializers.deserialize(
-        "json",
-        json_response.content.decode("utf-8"),
-    )
-    skills = [skill.object for skill in skills]
     search_query = request.GET.get("name", "").strip()
-
-     # Periksa status editor pengguna untuk pengaturan tampilan UI di template
     is_editor = is_editor_user(request.user)
 
     context = {
         "name": "Khayla Syafira Ardiasih",
-        "skill_list": skills,
-        "hard_skills": [s for s in skills if s.category == "hard"],
-        "soft_skills": [s for s in skills if s.category == "soft"],
         "search_query": search_query,
         "is_editor": is_editor,
+        "form": SkillForm(),  # Dipersiapkan untuk modal tambah skill di Langkah 4
     }
     return render(request, "skills.html", context)
 
@@ -111,15 +102,32 @@ def update_skill(request, skill_id):
 
 def get_skills_json(request):
     search_query = request.GET.get("name", "").strip()
-    skills = Skill.objects.all()
+    skills = Skill.objects.prefetch_related('starred_by').all()
 
     if search_query:
         skills = skills.filter(name__icontains=search_query)
 
-    skills_json = serializers.serialize(
-        "json", skills, use_natural_foreign_keys=True
-    )
-    return HttpResponse(skills_json, content_type="application/json")
+    data = []
+    for skill in skills:
+        starred_users = skill.starred_by.all()
+        is_starred = request.user in starred_users if request.user.is_authenticated else False
+        starred_by_names = ", ".join([u.username for u in starred_users])
+
+        data.append({
+            "pk": str(skill.id),
+            "fields": {
+                "name": skill.name,
+                "category": skill.category,
+                "description": skill.description or "",
+                "proficiency": skill.proficiency,
+                "logo_url": skill.logo_url or "",
+                "star_count": starred_users.count(),
+                "is_starred": is_starred,
+                "starred_by_names": starred_by_names,
+            }
+        })
+
+    return JsonResponse(data, safe=False)
 
 @login_required(login_url="/login/")
 def delete_skill(request, skill_id):
@@ -193,3 +201,21 @@ def is_editor_user(user):
     return user.is_authenticated and (
         user.groups.filter(name="Editor").exists() or user.has_perm("main.change_skill")
     )
+    
+@require_POST
+def create_skill_ajax(request):
+    if not request.user.is_superuser:
+        return JsonResponse(
+            {"message": "Hanya pemilik portofolio yang dapat menambahkan keahlian."},
+            status=403,
+        )
+
+    form = SkillForm(request.POST)
+    if form.is_valid():
+        skill = form.save()
+        return JsonResponse(
+            {"message": "Keahlian berhasil ditambahkan.", "pk": str(skill.id)},
+            status=201,
+        )
+
+    return JsonResponse({"errors": form.errors.get_json_data()}, status=400)

@@ -1,4 +1,6 @@
 from django.forms import ModelForm, TextInput, Textarea, URLInput, Select, NumberInput
+from django.core.exceptions import ValidationError
+from django.utils.html import strip_tags
 from main.models import Skill
 
 class SkillForm(ModelForm):
@@ -47,3 +49,13 @@ class SkillForm(ModelForm):
                 }
             ),
         }
+    
+    def clean_name(self):
+        name = strip_tags(self.cleaned_data["name"]).strip()
+        if not name:
+            raise ValidationError("Nama keahlian tidak boleh hanya berisi tag HTML.")
+        return name
+                
+    def clean_description(self):
+        desc = self.cleaned_data.get("description", "")
+        return strip_tags(desc).strip() if desc else ""

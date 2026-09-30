@@ -23,22 +23,24 @@
                     <h2 class="section-title" style="margin: 0;">SKILLS</h2>
                     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                         {% if user.is_superuser %}
-                            <a href="{% url 'main:create_skill' %}" class="button skill-add-button">
+                            <!-- Tombol membuka Modal Popover Tambah Keahlian -->
+                            <button type="button" class="button skill-add-button" popovertarget="add-skill-modal">
                                 <span aria-hidden="true">+</span> Tambah Keahlian
-                            </a>
+                            </button>
                         {% endif %}
                         <!-- Tombol Toggle Mode Edit / Hapus -->
-                         {% if user.is_superuser or is_editor %}
-                        <button type="button" id="toggle-manage-btn" class="button button-outline">
-                            Kelola Keahlian
-                        </button>
+                        {% if user.is_superuser or is_editor %}
+                            <button type="button" id="toggle-manage-btn" class="button button-outline">
+                                Kelola Keahlian
+                            </button>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Form Pencarian (Filter by Name) -->
-                <form method="get" action="{% url 'main:show_skills' %}" class="skill-search">
+                <!-- Form Pencarian (AJAX & Debouncing) -->
+                <form id="skill-search-form" class="skill-search">
                     <input type="search"
+                           id="search-input"
                            name="name"
                            value="{{ search_query }}"
                            placeholder="Cari berdasarkan nama keahlian..."
@@ -47,116 +49,333 @@
                     <button type="submit" class="button">Cari</button>
                 </form>
 
-                <!-- Menampilkan Pesan jika Tidak Ada Data / Tidak Ketemu -->
-                {% if not skill_list %}
-                    {% if search_query %}
-                        <p class="empty-state" style="text-align: center; color: var(--text-muted); font-size: 1.1rem; margin: 3rem 0;">
-                            Tidak ada keahlian dengan nama "{{ search_query }}".
-                        </p>
-                    {% else %}
-                        <p class="empty-state" style="text-align: center; color: var(--text-muted); font-size: 1.1rem; margin: 3rem 0;">
-                            Belum ada keahlian yang ditambahkan.
-                        </p>
-                    {% endif %}
-                {% else %}
-                
-                    <!-- Hard Skills -->
-                    <div class="skills-group">
+                <!-- State Loading, Error, & Empty -->
+                <div id="loading" class="empty-state hide" style="text-align: center; margin: 3rem 0;">
+                    <p style="color: var(--text-muted);">Memuat keahlian...</p>
+                </div>
+
+                <div id="error" class="empty-state hide" style="text-align: center; margin: 3rem 0;">
+                    <p style="color: #ef4444;">Gagal memuat data keahlian. Silakan coba lagi.</p>
+                </div>
+
+                <div id="empty" class="empty-state hide" style="text-align: center; margin: 3rem 0;">
+                    <p style="color: var(--text-muted); font-size: 1.1rem;">Belum ada keahlian yang ditambahkan atau ditemukan.</p>
+                </div>
+
+                <!-- Kontainer Utama Keahlian (diisi secara dinamis oleh JavaScript) -->
+                <div id="skills-container" class="hide">
+                    <!-- Hard Skills Group -->
+                    <div id="hard-skills-group" class="skills-group">
                         <h3 class="skills-subtitle">&mdash; Hard Skills</h3>
-                        <div class="floating-apps-row">
-                            {% for skill in hard_skills %}
-                                <div class="floating-app-item" style="position: relative;">
-                                    <!-- Aksi tombol edit dan hapus berdampingan -->
-                                    <div class="skill-item-actions">
-                                        {# Tombol ubah keahlian: dapat dilihat oleh Superuser dan Editor #}
-                                        {% if user.is_superuser or is_editor %}
-                                            <a href="{% url 'main:update_skill' skill.id %}"
-                                            class="edit-icon-btn"
-                                            title="Ubah {{ skill.name }}"
-                                            aria-label="Ubah {{ skill.name }}">
-                                                ✎
-                                            </a>
-                                        {% endif %}
-
-                                        {# Tombol hapus keahlian: hanya dapat dilihat oleh Superuser #}
-                                        {% if user.is_superuser %}
-                                            {% include "components/skill_delete_modal.html" with skill=skill %}
-                                        {% endif %}
-                                    </div>
-
-                                    <div class="app-icon-3d" title="{{ skill.name }}">
-                                        {% if skill.logo_url %}
-                                            <img src="{{ skill.logo_url }}" alt="{{ skill.name }}" class="app-logo-img">
-                                        {% else %}
-                                            <span class="app-placeholder-icon">✦</span>
-                                        {% endif %}
-                                    </div>
-                                    <span class="app-label">{{ skill.name }}</span>
-                                    {% include "components/skill_star.html" with skill=skill %}
-                                </div>
-                            {% empty %}
-                                <p class="empty-state" style="color: var(--text-muted);">Tidak ada hard skills yang sesuai.</p>
-                            {% endfor %}
-                        </div>
+                        <div id="hard-skills-row" class="floating-apps-row"></div>
                     </div>
 
-                    <!-- Soft Skills -->
-                    <div class="skills-group" style="margin-top: 2.5rem;">
+                    <!-- Soft Skills Group -->
+                    <div id="soft-skills-group" class="skills-group" style="margin-top: 2.5rem;">
                         <h3 class="skills-subtitle">&mdash; Soft Skills</h3>
-                        <div class="soft-skills-grid">
-                            {% for skill in soft_skills %}
-                                <div class="soft-skill-bar" style="position: relative; display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 1rem;">
-                                    <span class="bar-skill-name" style="text-align: left; margin-right: 0.5rem;">{{ skill.name }}</span>
-                                    
-                                    <!-- Wadah tombol star dan aksi di sisi kanan -->
-                                    <div style="display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0;">
-                                        {% include "components/skill_star.html" with skill=skill %}
-                                        
-                                        {# Bungkus edit dan hapus sesuai hak akses pengguna #}
-                                        {% if user.is_superuser or is_editor %}
-                                            <div class="soft-skill-actions" style="display: flex; gap: 0.35rem; align-items: center;">
-                                                {# Tombol ubah keahlian: dapat diakses Superuser dan Editor #}
-                                                <a href="{% url 'main:update_skill' skill.id %}"
-                                                class="edit-icon-btn"
-                                                title="Ubah {{ skill.name }}"
-                                                aria-label="Ubah {{ skill.name }}">
-                                                    ✎
-                                                </a>
-
-                                                {# Tombol hapus keahlian: hanya untuk Superuser #}
-                                                {% if user.is_superuser %}
-                                                    {% include "components/skill_delete_modal.html" with skill=skill %}
-                                                {% endif %}
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            {% empty %}
-                                <p class="empty-state" style="color: var(--text-muted);">Tidak ada soft skills yang sesuai.</p>
-                            {% endfor %}
-                        </div>
+                        <div id="soft-skills-grid" class="soft-skills-grid"></div>
                     </div>
-                {% endif %}
+                </div>
             </div>
         </section>
     </main>
 
-    <!-- Mode edit / hapus -->
-    <script>
-        const manageBtn = document.getElementById('toggle-manage-btn');
-        const skillsSection = document.getElementById('skills');
+    <!-- Modal Form Tambah Keahlian (Hanya dirender jika superuser) -->
+    {% if user.is_superuser %}
+        {% include "components/skill_form_modal.html" %}
+    {% endif %}
 
-        if (manageBtn && skillsSection) {
-            manageBtn.addEventListener('click', function () {
-                skillsSection.classList.toggle('edit-mode');
-                if (skillsSection.classList.contains('edit-mode')) {
-                    manageBtn.textContent = '✓ Selesai';
-                    manageBtn.classList.add('button-active');
-                } else {
-                    manageBtn.textContent = 'Kelola Keahlian';
-                    manageBtn.classList.remove('button-active');
+    <!-- Logika JavaScript Interaktif (AJAX, Debouncing, Modal, & XSS Protection) -->
+    <script>
+    // 1. Konfigurasi Endpoint & Status Pengguna
+    const BASE_SKILLS_ENDPOINT = "{% url 'main:get_skills_json' %}";
+    const CREATE_SKILL_ENDPOINT = "{% url 'main:create_skill_ajax' %}";
+    const IS_SUPERUSER = "{{ user.is_superuser|yesno:'true,false' }}" === "true";
+    const IS_EDITOR = "{{ is_editor|yesno:'true,false' }}" === "true";
+    let skillsAbortController;
+
+    // 2. Elemen DOM
+    const loadingState = document.getElementById('loading');
+    const errorState = document.getElementById('error');
+    const emptyState = document.getElementById('empty');
+    const skillsContainer = document.getElementById('skills-container');
+    const hardSkillsGroup = document.getElementById('hard-skills-group');
+    const hardSkillsRow = document.getElementById('hard-skills-row');
+    const softSkillsGroup = document.getElementById('soft-skills-group');
+    const softSkillsGrid = document.getElementById('soft-skills-grid');
+    const searchForm = document.getElementById('skill-search-form');
+    const searchInput = document.getElementById('search-input');
+    const skillForm = document.getElementById('skill-form');
+    const manageBtn = document.getElementById('toggle-manage-btn');
+    const skillsSection = document.getElementById('skills');
+
+    // 3. Debouncing Timer (300 ms jeda ketik)
+    const SEARCH_DEBOUNCE_DELAY = 300;
+    let searchDebounceTimer;
+
+    // 4. Helper: Proteksi XSS (Mengubah karakter spesial menjadi HTML Entity)
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    // 5. Helper: Membaca Token CSRF dari Cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
-            });
+            }
         }
+        return cookieValue;
+    }
+
+    // 6. Helper: Menutup Modal Popover
+    function closeSkillModal() {
+        const modal = document.getElementById("add-skill-modal");
+        if (modal) modal.hidePopover();
+    }
+
+    // 7. Pengatur Tampilan Bagian Halaman
+    function displayPageSection({ showLoading = false, showError = false, showEmpty = false, showContent = false }) {
+        loadingState.classList.toggle('hide', !showLoading);
+        errorState.classList.toggle('hide', !showError);
+        emptyState.classList.toggle('hide', !showEmpty);
+        skillsContainer.classList.toggle('hide', !showContent);
+    }
+
+    // 8. Merakit Elemen HTML untuk Hard Skill
+    function buildHardSkillElement(item) {
+        const skill = item.fields;
+        const skillId = item.pk;
+
+        const div = document.createElement('div');
+        div.className = 'floating-app-item';
+        div.style.position = 'relative';
+
+        const editUrl = "{% url 'main:update_skill' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', skillId);
+        const deleteUrl = "{% url 'main:delete_skill' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', skillId);
+        const starUrl = "{% url 'main:toggle_star' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', skillId);
+
+        let editBtn = '';
+        if (IS_SUPERUSER || IS_EDITOR) {
+            editBtn = `<a href="${editUrl}" class="edit-icon-btn" title="Ubah ${escapeHtml(skill.name)}" aria-label="Ubah ${escapeHtml(skill.name)}">✎</a>`;
+        }
+
+        let deleteBtn = '';
+        if (IS_SUPERUSER) {
+            deleteBtn = `
+                <form method="post" action="${deleteUrl}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="delete-icon-btn" onclick="return confirm('Yakin ingin menghapus keahlian ${escapeHtml(skill.name)}?');" title="Hapus ${escapeHtml(skill.name)}">×</button>
+                </form>
+            `;
+        }
+
+        const iconHtml = skill.logo_url 
+            ? `<img src="${escapeHtml(skill.logo_url)}" alt="${escapeHtml(skill.name)}" class="app-logo-img">`
+            : `<span class="app-placeholder-icon">✦</span>`;
+
+        const isStarredClass = skill.is_starred ? ' is-starred' : '';
+        const starText = skill.is_starred ? 'Unstar' : 'Star';
+        const starTitle = skill.star_count > 0 ? `Dibintangi oleh ${escapeHtml(skill.starred_by_names)}` : 'Jadilah yang pertama memberi star';
+
+        div.innerHTML = `
+            <div class="skill-item-actions">
+                ${editBtn}
+                ${deleteBtn}
+            </div>
+            <div class="app-icon-3d" title="${escapeHtml(skill.name)}">
+                ${iconHtml}
+            </div>
+            <span class="app-label">${escapeHtml(skill.name)}</span>
+            <form method="post" action="${starUrl}" class="star-form">
+                {% csrf_token %}
+                <button type="submit" class="button button-star${isStarredClass}" title="${starTitle}">
+                    <span aria-hidden="true">★</span>
+                    ${starText}
+                    <span class="star-count">${skill.star_count}</span>
+                </button>
+            </form>
+        `;
+        return div;
+    }
+
+    // 9. Merakit Elemen HTML untuk Soft Skill
+    function buildSoftSkillElement(item) {
+        const skill = item.fields;
+        const skillId = item.pk;
+
+        const div = document.createElement('div');
+        div.className = 'soft-skill-bar';
+        div.style.cssText = 'position: relative; display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 1rem;';
+
+        const editUrl = "{% url 'main:update_skill' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', skillId);
+        const deleteUrl = "{% url 'main:delete_skill' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', skillId);
+        const starUrl = "{% url 'main:toggle_star' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', skillId);
+
+        let actionBtns = '';
+        if (IS_SUPERUSER || IS_EDITOR) {
+            let delBtn = IS_SUPERUSER ? `
+                <form method="post" action="${deleteUrl}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="delete-icon-btn" onclick="return confirm('Yakin ingin menghapus keahlian ${escapeHtml(skill.name)}?');" title="Hapus ${escapeHtml(skill.name)}">×</button>
+                </form>
+            ` : '';
+            actionBtns = `
+                <div class="soft-skill-actions" style="display: flex; gap: 0.35rem; align-items: center;">
+                    <a href="${editUrl}" class="edit-icon-btn" title="Ubah ${escapeHtml(skill.name)}" aria-label="Ubah ${escapeHtml(skill.name)}">✎</a>
+                    ${delBtn}
+                </div>
+            `;
+        }
+
+        const isStarredClass = skill.is_starred ? ' is-starred' : '';
+        const starText = skill.is_starred ? 'Unstar' : 'Star';
+        const starTitle = skill.star_count > 0 ? `Dibintangi oleh ${escapeHtml(skill.starred_by_names)}` : 'Jadilah yang pertama memberi star';
+
+        div.innerHTML = `
+            <span class="bar-skill-name" style="text-align: left; margin-right: 0.5rem;">${escapeHtml(skill.name)}</span>
+            <div style="display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0;">
+                <form method="post" action="${starUrl}" class="star-form">
+                    {% csrf_token %}
+                    <button type="submit" class="button button-star${isStarredClass}" title="${starTitle}">
+                        <span aria-hidden="true">★</span>
+                        ${starText}
+                        <span class="star-count">${skill.star_count}</span>
+                    </button>
+                </form>
+                ${actionBtns}
+            </div>
+        `;
+        return div;
+    }
+
+    // 10. Mengambil Data Keahlian lewat Fetch API (AJAX GET)
+    async function fetchSkills(searchQuery = "") {
+        if (skillsAbortController) skillsAbortController.abort();
+        skillsAbortController = new AbortController();
+
+        try {
+            displayPageSection({ showLoading: true });
+            const url = searchQuery ? `${BASE_SKILLS_ENDPOINT}?name=${encodeURIComponent(searchQuery)}` : BASE_SKILLS_ENDPOINT;
+
+            const response = await fetch(url, {
+                headers: { 'Accept': 'application/json' },
+                signal: skillsAbortController.signal,
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch skills');
+            const data = await response.json();
+
+            if (data.length === 0) {
+                displayPageSection({ showEmpty: true });
+            } else {
+                hardSkillsRow.innerHTML = '';
+                softSkillsGrid.innerHTML = '';
+
+                let hasHard = false;
+                let hasSoft = false;
+
+                data.forEach(item => {
+                    if (item.fields.category === 'hard') {
+                        hardSkillsRow.appendChild(buildHardSkillElement(item));
+                        hasHard = true;
+                    } else {
+                        softSkillsGrid.appendChild(buildSoftSkillElement(item));
+                        hasSoft = true;
+                    }
+                });
+
+                hardSkillsGroup.style.display = hasHard ? 'block' : 'none';
+                softSkillsGroup.style.display = hasSoft ? 'block' : 'none';
+
+                displayPageSection({ showContent: true });
+            }
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            console.error('Error loading skills:', error);
+            displayPageSection({ showError: true });
+        }
+    }
+
+    // 11. Handler Pencarian dengan Debouncing
+    function triggerSearch() {
+        fetchSkills(searchInput.value.trim());
+    }
+
+    searchInput.addEventListener("input", function() {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(triggerSearch, SEARCH_DEBOUNCE_DELAY);
+    });
+
+    searchForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+        clearTimeout(searchDebounceTimer);
+        triggerSearch();
+    });
+
+    // 12. Handler Tambah Keahlian via AJAX (POST)
+    async function addSkill(event) {
+        event.preventDefault();
+        const submitButton = skillForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+
+        try {
+            const response = await fetch(CREATE_SKILL_ENDPOINT, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                body: new FormData(skillForm),
+            });
+            const result = await response.json().catch(() => ({}));
+
+            if (response.ok) {
+                skillForm.reset();
+                closeSkillModal();
+                showToast('Berhasil', 'Keahlian baru berhasil ditambahkan!', 'success');
+                fetchSkills(searchInput.value.trim());
+            } else {
+                const errorMessages = result.errors
+                    ? Object.values(result.errors).flat().map(error => error.message)
+                    : [result.message || `Terjadi kesalahan (status ${response.status}).`];
+                showToast('Gagal menambahkan keahlian', errorMessages.join(' '), 'error');
+            }
+        } catch (error) {
+            console.error('Error adding skill:', error);
+            showToast('Gagal menambahkan keahlian', 'Tidak dapat terhubung ke server.', 'error');
+        } finally {
+            submitButton.disabled = false;
+        }
+    }
+
+    if (skillForm) {
+        skillForm.addEventListener('submit', addSkill);
+    }
+
+    // 13. Fitur Tombol Kelola Keahlian (Mode Edit/Hapus)
+    if (manageBtn && skillsSection) {
+        manageBtn.addEventListener('click', function () {
+            skillsSection.classList.toggle('edit-mode');
+            if (skillsSection.classList.contains('edit-mode')) {
+                manageBtn.textContent = '✓ Selesai';
+                manageBtn.classList.add('button-active');
+            } else {
+                manageBtn.textContent = 'Kelola Keahlian';
+                manageBtn.classList.remove('button-active');
+            }
+        });
+    }
+
+    // 14. Pemanggilan Data Pertama Kali saat Halaman Dibuka
+    fetchSkills(searchInput.value.trim());
     </script>
 {% endblock content %}
