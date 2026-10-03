@@ -187,13 +187,28 @@ def toggle_star(request, skill_id):
     skill = get_object_or_404(Skill, pk=skill_id)
 
     if request.method == "POST":
+        # Toggle status bintang keahlian untuk user saat ini
         if request.user in skill.starred_by.all():
             skill.starred_by.remove(request.user)
-            messages.info(request, f"Batal menyukai keahlian '{skill.name}'.")
+            is_starred = False
+            msg = f"Batal menyukai keahlian '{skill.name}'."
+            messages.info(request, msg)
         else:
             skill.starred_by.add(request.user)
-            messages.success(request, f"Berhasil memberikan star pada '{skill.name}'! ✦")
+            is_starred = True
+            msg = f"Berhasil memberikan star pada '{skill.name}'! ✦"
+            messages.success(request, msg)
 
+        # Kembalikan JSON jika request dikirim lewat Fetch / AJAX
+        if request.headers.get("x-requested-with") == "XMLHttpRequest" or request.headers.get("Accept") == "application/json":
+            return JsonResponse({
+                "status": "success",
+                "is_starred": is_starred,
+                "star_count": skill.starred_by.count(),
+                "message": msg,
+            })
+
+    # Fallback redirect untuk form submit standar
     return redirect("main:show_skills")
 
 def is_editor_user(user):
@@ -201,7 +216,7 @@ def is_editor_user(user):
     return user.is_authenticated and (
         user.groups.filter(name="Editor").exists() or user.has_perm("main.change_skill")
     )
-    
+
 @require_POST
 def create_skill_ajax(request):
     if not request.user.is_superuser:
