@@ -85,22 +85,21 @@ class MainTest(TestCase):
     
     def test_skills_page(self):
         response = self.client.get(reverse("main:show_skills"))
-        # 1. URL dapat diakses dan menggunakan template yang tepat
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "skills.html")
-        # 2. Data model muncul di halaman HTML ketika ada data
-        self.assertContains(response, self.hard_skill.name)
-        self.assertContains(response, self.soft_skill.name)
-        self.assertContains(response, "Hard Skills")
-        self.assertContains(response, "Soft Skills")
+        # Pastikan kerangka elemen AJAX termuat di halaman
+        self.assertContains(response, 'id="skills-container"')
+        self.assertContains(response, 'id="loading"')
+        self.assertContains(response, 'id="empty"')
+        self.assertContains(response, 'id="search-input"')
         self.assertContains(response, f'href="{reverse("main:show_main")}"')
-    
+
     def test_empty_skills_page(self):
-        # 3. Menampilkan pesan kondisi kosong ketika belum ada data
         Skill.objects.all().delete()
         response = self.client.get(reverse("main:show_skills"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Belum ada keahlian yang ditambahkan.")
+        # Cek pesan penampung kondisi kosong pada template
+        self.assertContains(response, "Belum ada keahlian yang ditambahkan atau ditemukan.")
 
     def test_create_skill(self):
         """Memastikan new skill dapat ditambahkan lewat POST request"""
@@ -262,3 +261,79 @@ class MainTest(TestCase):
         res_unstar = self.client.post(reverse("main:toggle_star", args=[self.hard_skill.id]))
         self.assertEqual(res_unstar.status_code, 302)
         self.assertEqual(self.hard_skill.starred_by.count(), 0)
+        # --- PENGUJIAN FITUR TUGAS 5 (AJAX & XSS) ---
+
+    def test_get_skills_json_with_search_query(self):
+        # Uji filter pencarian nama via query parameter (?name=...)
+        response = self.client.get(reverse("main:get_skills_json"), {"name": "Python"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/json")
+        self.assertContains(response, "Python")
+        self.assertNotContains(response, "Problem Solving")
+
+    def test_create_skill_ajax_success(self):
+        # Uji tambah keahlian via AJAX POST oleh superuser (berhasil 201)
+        self.client.login(username="admin_test", password="password123")
+        response = self.client.post(reverse("main:create_skill_ajax"), {
+            "name": "TypeScript",
+            "category": "hard",
+            "description": "Superset of JavaScript",
+            "proficiency": 80,
+            "logo_url": "https://example.com/ts.png",
+        })
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertEqual(data["message"], "Keahlian berhasil ditambahkan.")
+        self.assertTrue(Skill.objects.filter(name="TypeScript").exists())
+
+    def test_create_skill_ajax_forbidden_for_regular_user(self):
+        # Uji penolakan akses tambah keahlian untuk pengguna biasa (403 Forbidden)
+        User.objects.create_user(username="regular_ajax", password="password123")
+        self.client.login(username="regular_ajax", password="password123")
+        response = self.client.post(reverse("main:create_skill_ajax"), {
+            "name": "TypeScript",
+            "category": "hard",
+            "proficiency": 80,
+        })
+        self.assertEqual(response.status_code, 403)
+
+    def test_create_skill_ajax_forbidden_for_anonymous_user(self):
+        # Uji penolakan akses tambah keahlian untuk pengguna belum login (403 Forbidden)
+        response = self.client.post(reverse("main:create_skill_ajax"), {
+            "name": "TypeScript",
+            "category": "hard",
+            "proficiency": 80,
+        })
+        self.assertEqual(response.status_code, 403)
+
+    def test_create_skill_ajax_invalid_data(self):
+        # Uji respon 400 Bad Request saat data form tidak valid
+        self.client.login(username="admin_test", password="password123")
+        response = self.client.post(reverse("main:create_skill_ajax"), {
+            "name": "",  # Field wajib sengaja dikosongkan
+            "category": "hard",
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("errors", response.json())
+
+    def test_skill_form_xss_sanitization(self):
+        # Uji pembersihan tag HTML berbahaya oleh strip_tags pada form
+        from main.forms import SkillForm
+        form_data = {
+            "name": "<script>alert('XSS')</script>C++ Programming",
+            "category": "hard",
+            "description": "<img src=x onerror=alert('hack')>Deskripsi aman",
+            "proficiency": 90,
+            "logo_url": "",
+        }
+        form = SkillForm(data=form_data)
+        self.assertTrue(form.is_valid())
+        self.assertEqual(form.cleaned_data["name"], "alert('XSS')C++ Programming")
+        self.assertEqual(form.cleaned_data["description"], "Deskripsi aman")
+
+    def test_skill_form_rejects_only_html_tags(self):
+        # Uji penolakan input nama jika hanya berisi tag HTML kosong
+        from main.forms import SkillForm
+        form = SkillForm(data={"name": "<b></b>", "category": "hard", "proficiency": 80})
+        self.assertFalse(form.is_valid())
+        self.assertIn("name", form.errors)
