@@ -120,7 +120,7 @@ Bagian yang Dibantu AI:
 
 ### Tugas 4
 
-## AI Disclosure & Analisis Kritis
+## AI Disclosure & Analisis Kritis Keterbatasan AI
 
 Dalam pengerjaan Tugas 4 ini, saya menggunakan AI untuk konsultasi teknis, verifikasi arsitektur otorisasi Django, serta penyusunan skenario pengujian otomatis.
 
@@ -139,3 +139,40 @@ Analisis Kritis Keterbatasan AI & Perbaikan Manual:
 
 3. Penyempurnaan Antarmuka 'Kelola Keahlian':
    AI sempat membiarkan tombol toggle 'Kelola Keahlian' tampil untuk semua pengguna termasuk pengunjung biasa. Oleh karena itu, saya menambahkan pengkondisian agar tombol tersebut hanya muncul bagi peran yang memiliki hak modifikasi (Superuser dan Editor), sehingga pengunjung dan pengguna reguler mendapatkan tampilan yang bersih dan bebas dari kontrol yang tidak relevan.
+
+### Tugas 5
+
+1. Debouncing pada Fitur Pencarian AJAX
+   - Pengertian: Teknik menunda eksekusi request AJAX sampai pengguna berhenti mengetik selama jeda waktu tertentu (misalnya 300 ms). Jika pengguna mengetik kembali sebelum jeda berakhir, timer di-reset.
+   - Alasan Penting: 
+     - Menghemat beban server: Menghindari pengiriman request HTTP di setiap ketukan huruf (keystroke).
+     - Mencegah race condition: Menghindari respon pencarian lama menimpa respon pencarian terbaru karena perbedaan latensi jaringan.
+
+2. Fungsi `await` pada `fetch()`
+   - Fungsi: Menunda eksekusi baris kode berikutnya hingga `Promise` dari `fetch()` atau `.json()` selesai diselesaikan (resolved).
+   - Jika Tanpa `await`: Kode langsung melanjutkan eksekusi dengan objek `Promise { <pending> }`. Akibatnya, `response.json()` memicu error atau menghasilkan `undefined` karena data dari server belum selesai diterima.
+
+3. Kerentanan XSS pada AJAX vs Template Django
+   - Pengertian XSS: Celah di mana penyerang menyuntikkan skrip berbahaya (misal `<script>` atau `<img onerror=...>`) yang dieksekusi oleh peramban pengguna lain.
+   - Perbedaan Kerentanan:
+     - Template Django: Memiliki fitur auto-escaping bawaan yang otomatis mengubah karakter HTML berbahaya (`<`, `>`, `&`) menjadi teks aman.
+     - AJAX / JavaScript: Menerima raw string JSON dan sering menyisipkannya langsung ke DOM via `innerHTML`. Browser akan langsung mengeksekusi tag tersebut jika developer lupa melakukan escaping manual (`escapeHtml()`) di JavaScript dan sanitasi (`strip_tags`) di server.
+
+## AI Disclosure & Analisis Kritis Keterbatasan AI
+
+Dalam pengerjaan Tugas 5, saya menggunakan AI sebagai referensi teknis untuk logika AJAX, sanitasi XSS, dan pembuatan unit test.
+
+Tools yang Digunakan: ChatGPT
+
+Bagian yang Dibantu AI:
+1. Menyusun struktur fungsi debouncing pencarian berbasis `setTimeout` dan `clearTimeout`.
+2. Menyusun unit test untuk menguji respon HTTP (200, 201, 400, 403) pada endpoint AJAX dan sanitasi XSS.
+3. Memberikan referensi handler AJAX untuk toggle star tanpa reload halaman.
+
+Analisis Kritis Keterbatasan AI & Perbaikan Manual:
+
+1. Perilaku `strip_tags` Django: AI awalnya berasumsi `strip_tags` menghapus seluruh isi teks di dalam tag `<script>`. Faktanya, fungsi bawaan Django hanya menghapus tag kurung `<>` dan menyisakan teks di dalamnya. Saya menyesuaikan ekspektasi test dan memastikan proteksi escaping sisi pengguna (`escapeHtml`) tetap aktif.
+
+2. Penyesuaian Unit Test AJAX: AI sempat menyarankan merender kembali data ke HTML agar test lama lolos. Saya menolak saran tersebut dan merombak unit test agar memvalidasi kerangka DOM AJAX (`#skills-container`, `#loading`, `#empty`), sesuai ketentuan tugas.
+
+3. Pengecekan Elemen Modal: AI awalnya membuat script yang langsung memanggil form modal tanpa validasi elemen. Saya menambahkan pengecekan agar tidak terjadi error di browser pengguna biasa saat modal tidak dirender.
