@@ -199,6 +199,7 @@ def toggle_star(request, skill_id):
             msg = f"Berhasil memberikan star pada '{skill.name}'! ✦"
             messages.success(request, msg)
 
+        # FITUR EKSTRA: Respons JSON untuk AJAX Star Toggle
         # Kembalikan JSON jika request dikirim lewat Fetch / AJAX
         if request.headers.get("x-requested-with") == "XMLHttpRequest" or request.headers.get("Accept") == "application/json":
             return JsonResponse({
