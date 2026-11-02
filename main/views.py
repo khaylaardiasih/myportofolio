@@ -10,6 +10,10 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
 from main.forms import SkillForm
 from main.models import Experience, Skill
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from main.serializers import SkillSerializer, ExperienceSerializer
 import datetime
 
 def show_main(request):
@@ -235,3 +239,132 @@ def create_skill_ajax(request):
         )
 
     return JsonResponse({"errors": form.errors.get_json_data()}, status=400)
+
+# Tutorial 7 Django REST Framework (DRF) API Views
+
+@api_view(['GET'])
+def api_skill_list(request):
+    """
+    Mengembalikan daftar semua keahlian dalam format JSON.
+    Mendukung filter pencarian via query param ?name=...
+    """
+    # Ambil query parameter 'name' untuk filter pencarian
+    search_query = request.GET.get('name', '').strip()
+    skills = Skill.objects.all()
+
+    # Filter berdasarkan nama jika query param 'name' disertakan
+    if search_query:
+        skills = skills.filter(name__icontains=search_query)
+
+    # Serialisasi queryset; many=True karena lebih dari satu objek
+    serializer = SkillSerializer(skills, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def api_skill_detail(request, skill_id):
+    """
+    Mengembalikan detail satu keahlian berdasarkan UUID.
+    """
+    # get_object_or_404 otomatis mengembalikan 404 jika tidak ditemukan
+    skill = get_object_or_404(Skill, pk=skill_id)
+    serializer = SkillSerializer(skill)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+def api_skill_create(request):
+    """
+    Membuat keahlian baru. Hanya bisa dilakukan oleh superuser.
+    Request body: JSON dengan field name, category, description, proficiency, logo_url
+    """
+    # Pastikan hanya superuser yang bisa membuat skill via API
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return Response(
+            {'message': 'Hanya pemilik portofolio yang dapat menambahkan keahlian.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Deserialisasi data dari request; DRF otomatis membaca JSON body
+    serializer = SkillSerializer(data=request.data)
+    if serializer.is_valid():
+        # Simpan objek baru ke database
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    # Jika validasi gagal, kembalikan error detail
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT', 'PATCH'])
+def api_skill_update(request, skill_id):
+    """
+    Mengubah data keahlian. Superuser atau Editor bisa mengakses endpoint ini.
+    - PUT: update semua field (partial=False)
+    - PATCH: update sebagian field saja (partial=True)
+    """
+    # Cek izin: hanya superuser atau editor yang boleh update
+    if not request.user.is_authenticated or not (
+        request.user.is_superuser or is_editor_user(request.user)
+    ):
+        return Response(
+            {'message': 'Anda tidak memiliki izin untuk mengubah keahlian.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    skill = get_object_or_404(Skill, pk=skill_id)
+
+    # partial=True jika method PATCH (update sebagian field saja)
+    is_partial = request.method == 'PATCH'
+    serializer = SkillSerializer(skill, data=request.data, partial=is_partial)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['DELETE'])
+def api_skill_delete(request, skill_id):
+    """
+    Menghapus keahlian. Hanya superuser yang diizinkan.
+    """
+    # Hanya superuser yang bisa menghapus skill
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return Response(
+            {'message': 'Hanya pemilik portofolio yang dapat menghapus keahlian.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    skill = get_object_or_404(Skill, pk=skill_id)
+    skill_name = skill.name  # Simpan nama sebelum dihapus untuk pesan konfirmasi
+    skill.delete()
+
+    # 204 No Content: berhasil dihapus, tidak ada response body
+    return Response(
+        {'message': f"Keahlian '{skill_name}' berhasil dihapus."},
+        status=status.HTTP_200_OK
+    )
+
+
+@api_view(['GET'])
+def api_experience_list(request):
+    """
+    Mengembalikan daftar semua pengalaman dalam format JSON.
+    """
+    experiences = Experience.objects.all()
+
+    # Serialisasi queryset pengalaman
+    serializer = ExperienceSerializer(experiences, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def api_experience_detail(request, experience_id):
+    """
+    Mengembalikan detail satu pengalaman berdasarkan UUID.
+    """
+    experience = get_object_or_404(Experience, pk=experience_id)
+    serializer = ExperienceSerializer(experience)
+    return Response(serializer.data)
