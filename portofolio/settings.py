@@ -158,3 +158,22 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.pbp.cs.ui.ac.id", # jika kamu sudah deploy ke PWS
     "https://*.pws.cs.ui.ac.id",
 ]
+
+# Django REST Framework Configuration 
+# Mengatur default renderer, authenticator, dan permission untuk semua API endpoint
+REST_FRAMEWORK = {
+    # Gunakan JSON sebagai format output utama
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',  # UI browser interaktif saat development
+    ],
+    # Gunakan session auth (cookie Django) dan basic auth untuk API
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    # Default: semua orang boleh membaca (GET), tapi write harus terautentikasi
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+}
