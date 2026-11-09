@@ -85,12 +85,12 @@
         {% include "components/skill_form_modal.html" %}
     {% endif %}
 
-        <!-- Modal Form Ubah Keahlian (Hanya untuk Superuser atau Editor) -->
+    <!-- Modal Form Ubah Keahlian (Hanya untuk Superuser atau Editor) -->
     {% if user.is_superuser or is_editor %}
         {% include "components/skill_edit_modal.html" %}
     {% endif %}
 
-        <!-- Logika JavaScript Interaktif Terintegrasi dengan Django REST Framework -->
+    <!-- Logika JavaScript Interaktif Terintegrasi dengan Django REST Framework -->
     <script>
     // 1. Konfigurasi Endpoint REST API (DRF)
     const SKILLS_API_ENDPOINT = "/api/v1/skills/";
@@ -229,7 +229,7 @@
 
         // Event listener tombol Star (AJAX POST)
         const starEl = div.querySelector('.button-star');
-        if (starEl) starEl.addEventListener('click', () => handleToggleStar(skill.id));
+        if (starEl) starEl.addEventListener('click', (e) => handleToggleStar(skill.id, e.currentTarget));
 
         return div;
     }
@@ -273,7 +273,7 @@
         if (delEl) delEl.addEventListener('click', () => handleDeleteSkill(skill.id, skill.name));
 
         const starEl = div.querySelector('.button-star');
-        if (starEl) starEl.addEventListener('click', () => handleToggleStar(skill.id));
+        if (starEl) starEl.addEventListener('click', (e) => handleToggleStar(skill.id, e.currentTarget));
 
         return div;
     }
@@ -439,8 +439,28 @@
         }
     }
 
+    // KREATIVITAS JAVASCRIPT: Fungsi pembuat partikel bintang saat tombol Star ditekan
+    function triggerStarSparkle(button) {
+        if (!button) return;
+        const sparkle = document.createElement('span');
+        sparkle.textContent = '✦';
+        sparkle.style.cssText = `
+            position: absolute;
+            left: 50%;
+            top: 20%;
+            pointer-events: none;
+            color: var(--accent, #ea5a8c);
+            font-size: 1.5rem;
+            animation: floatSparkle 0.6s ease-out forwards;
+            z-index: 10;
+        `;
+        button.style.position = 'relative';
+        button.appendChild(sparkle);
+        setTimeout(() => sparkle.remove(), 600);
+    }
+
     // 11. Handler Toggle Star via DRF POST (/api/v1/skills/<id>/star/)
-    async function handleToggleStar(skillId) {
+    async function handleToggleStar(skillId, buttonElement = null) {
         if (!IS_AUTHENTICATED) {
             showToast('Perlu Login', 'Silakan login terlebih dahulu untuk memberikan star.', 'normal');
             return;
@@ -457,6 +477,11 @@
             const result = await response.json().catch(() => ({}));
 
             if (response.ok) {
+                // KREATIVITAS: Memicu letupan bintang jika pengguna baru saja memberi star
+                if (result.is_starred && buttonElement) {
+                    triggerStarSparkle(buttonElement);
+                }
+
                 showToast('Star', result.message || 'Status star berhasil diperbarui.', 'success');
                 fetchSkills(searchInput.value.trim());
             } else if (response.status === 403) {

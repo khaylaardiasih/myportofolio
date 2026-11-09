@@ -1136,3 +1136,15 @@ h1, .brand, .section-title, .exp-title { /* Menambahkan .section-title & .exp-ti
         border-radius: var(--radius, 12px) var(--radius, 12px) 0 0;
     }
 }
+
+/* --- Kreativitas Tugas 6: Animasi Sparkle Burst saat Star Diklik --- */
+@keyframes floatSparkle {
+    0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -40px) scale(1.5);
+        opacity: 0;
+    }
+}

@@ -1,47 +1,59 @@
-<!-- Modal Edit Keahlian (Fitur Kreativitas: Edit Langsung via AJAX PATCH tanpa Reload Halaman) -->
-<div id="edit-skill-modal" popover="auto" class="skill-modal-popover">
-    <div class="skill-modal-content">
-        <div class="skill-modal-header">
-            <h3 class="modal-title">Ubah Keahlian</h3>
-            <button type="button" class="modal-close-btn" onclick="closeEditSkillModal()" aria-label="Tutup modal">&times;</button>
-        </div>
+<!-- Modal Edit Keahlian (Kreativitas: In-Page Edit Modal via AJAX PATCH) -->
+<div id="edit-skill-modal"
+     class="project-form-modal"
+     popover="auto"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="edit-skill-modal-title">
+    <button type="button"
+            class="project-form-modal__backdrop"
+            onclick="closeEditSkillModal()"
+            aria-label="Tutup form"></button>
 
-        <form id="edit-skill-form" class="skill-form">
+    <div class="project-form-modal__content">
+        <button type="button"
+                class="project-form-modal__close"
+                onclick="closeEditSkillModal()"
+                aria-label="Tutup form">×</button>
+
+        <h2 id="edit-skill-modal-title">Ubah Keahlian</h2>
+        <form id="edit-skill-form" class="project-form">
             <input type="hidden" id="edit-skill-id" name="id">
 
             <div class="form-group">
-                <label for="edit-skill-name" class="form-label">Nama Keahlian</label>
+                <label for="edit-skill-name">Nama Keahlian</label>
                 <input type="text" id="edit-skill-name" name="name" class="form-input" required placeholder="Contoh: Django REST Framework">
             </div>
 
             <div class="form-group">
-                <label for="edit-skill-category" class="form-label">Kategori</label>
+                <label for="edit-skill-category">Kategori</label>
                 <select id="edit-skill-category" name="category" class="form-select" required>
                     <option value="hard">Hard Skills</option>
                     <option value="soft">Soft Skills</option>
                 </select>
             </div>
 
+            <!-- KREATIVITAS: Slider interaktif dengan angka persentase real-time -->
             <div class="form-group">
-                <label for="edit-skill-proficiency" class="form-label">
-                    Tingkat Kemampuan: <span id="edit-proficiency-val" style="color: var(--accent-pink, #f472b6); font-weight: bold;">80</span>%
+                <label for="edit-skill-proficiency">
+                    Tingkat Kemampuan: <span id="edit-proficiency-val" style="color: var(--accent, #ea5a8c); font-weight: bold;">80</span>%
                 </label>
-                <input type="range" id="edit-skill-proficiency" name="proficiency" min="1" max="100" value="80" class="form-range"
+                <input type="range" id="edit-skill-proficiency" name="proficiency" min="1" max="100" value="80"
                        oninput="document.getElementById('edit-proficiency-val').textContent = this.value">
             </div>
 
             <div class="form-group">
-                <label for="edit-skill-description" class="form-label">Deskripsi</label>
-                <textarea id="edit-skill-description" name="description" class="form-textarea" rows="3" placeholder="Deskripsi singkat keahlian..."></textarea>
+                <label for="edit-skill-description">Deskripsi</label>
+                <textarea id="edit-skill-description" name="description" rows="3" placeholder="Deskripsi singkat keahlian..."></textarea>
             </div>
 
             <div class="form-group">
-                <label for="edit-skill-logo" class="form-label">URL Logo / Ikon (Opsional)</label>
-                <input type="url" id="edit-skill-logo" name="logo_url" class="form-input" placeholder="https://example.com/logo.png">
+                <label for="edit-skill-logo">URL Logo / Ikon (Opsional)</label>
+                <input type="url" id="edit-skill-logo" name="logo_url" placeholder="https://example.com/logo.png">
             </div>
 
-            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
-                <button type="button" class="button button-outline" onclick="closeEditSkillModal()">Batal</button>
+            <div class="project-form-modal__actions">
+                <button type="button" class="button button-secondary" onclick="closeEditSkillModal()">Batal</button>
                 <button type="submit" class="button">Simpan Perubahan</button>
             </div>
         </form>
