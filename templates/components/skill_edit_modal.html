@@ -1,0 +1,49 @@
+<!-- Modal Edit Keahlian (Fitur Kreativitas: Edit Langsung via AJAX PATCH tanpa Reload Halaman) -->
+<div id="edit-skill-modal" popover="auto" class="skill-modal-popover">
+    <div class="skill-modal-content">
+        <div class="skill-modal-header">
+            <h3 class="modal-title">Ubah Keahlian</h3>
+            <button type="button" class="modal-close-btn" onclick="closeEditSkillModal()" aria-label="Tutup modal">&times;</button>
+        </div>
+
+        <form id="edit-skill-form" class="skill-form">
+            <input type="hidden" id="edit-skill-id" name="id">
+
+            <div class="form-group">
+                <label for="edit-skill-name" class="form-label">Nama Keahlian</label>
+                <input type="text" id="edit-skill-name" name="name" class="form-input" required placeholder="Contoh: Django REST Framework">
+            </div>
+
+            <div class="form-group">
+                <label for="edit-skill-category" class="form-label">Kategori</label>
+                <select id="edit-skill-category" name="category" class="form-select" required>
+                    <option value="hard">Hard Skills</option>
+                    <option value="soft">Soft Skills</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-skill-proficiency" class="form-label">
+                    Tingkat Kemampuan: <span id="edit-proficiency-val" style="color: var(--accent-pink, #f472b6); font-weight: bold;">80</span>%
+                </label>
+                <input type="range" id="edit-skill-proficiency" name="proficiency" min="1" max="100" value="80" class="form-range"
+                       oninput="document.getElementById('edit-proficiency-val').textContent = this.value">
+            </div>
+
+            <div class="form-group">
+                <label for="edit-skill-description" class="form-label">Deskripsi</label>
+                <textarea id="edit-skill-description" name="description" class="form-textarea" rows="3" placeholder="Deskripsi singkat keahlian..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-skill-logo" class="form-label">URL Logo / Ikon (Opsional)</label>
+                <input type="url" id="edit-skill-logo" name="logo_url" class="form-input" placeholder="https://example.com/logo.png">
+            </div>
+
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
+                <button type="button" class="button button-outline" onclick="closeEditSkillModal()">Batal</button>
+                <button type="submit" class="button">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
