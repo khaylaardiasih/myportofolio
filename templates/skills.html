@@ -85,14 +85,17 @@
         {% include "components/skill_form_modal.html" %}
     {% endif %}
 
-    <!-- Logika JavaScript Interaktif (AJAX, Debouncing, Modal, & XSS Protection) -->
+        <!-- Modal Form Ubah Keahlian (Hanya untuk Superuser atau Editor) -->
+    {% if user.is_superuser or is_editor %}
+        {% include "components/skill_edit_modal.html" %}
+    {% endif %}
+
+        <!-- Logika JavaScript Interaktif Terintegrasi dengan Django REST Framework -->
     <script>
-    // 1. Konfigurasi Endpoint & Status Pengguna
-    const BASE_SKILLS_ENDPOINT = "{% url 'main:get_skills_json' %}";
-    const CREATE_SKILL_ENDPOINT = "{% url 'main:create_skill_ajax' %}";
+    // 1. Konfigurasi Endpoint REST API (DRF)
+    const SKILLS_API_ENDPOINT = "/api/v1/skills/";
     const IS_SUPERUSER = "{{ user.is_superuser|yesno:'true,false' }}" === "true";
     const IS_EDITOR = "{{ is_editor|yesno:'true,false' }}" === "true";
-    // Cek status autentikasi pengguna saat ini
     const IS_AUTHENTICATED = "{{ user.is_authenticated|yesno:'true,false' }}" === "true";
     let skillsAbortController;
 
@@ -108,14 +111,15 @@
     const searchForm = document.getElementById('skill-search-form');
     const searchInput = document.getElementById('search-input');
     const skillForm = document.getElementById('skill-form');
+    const editSkillForm = document.getElementById('edit-skill-form');
     const manageBtn = document.getElementById('toggle-manage-btn');
     const skillsSection = document.getElementById('skills');
 
-    // 3. Debouncing Timer (300 ms jeda ketik)
+    // Debounce timer (300 ms jeda ketik saat mencari)
     const SEARCH_DEBOUNCE_DELAY = 300;
     let searchDebounceTimer;
 
-    // 4. Helper: Proteksi XSS (Mengubah karakter spesial menjadi HTML Entity)
+    // 3. Helper: Proteksi XSS (Auto-escaping pada nilai teks yang disisipkan ke DOM)
     function escapeHtml(value) {
         return String(value ?? '')
             .replaceAll('&', '&amp;')
@@ -125,7 +129,7 @@
             .replaceAll("'", '&#39;');
     }
 
-    // 5. Helper: Membaca Token CSRF dari Cookie
+    // 4. Helper: Mengambil Token CSRF untuk permintaan POST, PATCH, dan DELETE
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -141,13 +145,32 @@
         return cookieValue;
     }
 
-    // 6. Helper: Menutup Modal Popover
+    // Fungsi menutup modal
     function closeSkillModal() {
         const modal = document.getElementById("add-skill-modal");
         if (modal) modal.hidePopover();
     }
 
-    // 7. Pengatur Tampilan Bagian Halaman
+    function closeEditSkillModal() {
+        const modal = document.getElementById("edit-skill-modal");
+        if (modal) modal.hidePopover();
+    }
+
+    // Fungsi membuka modal edit dan mengisi datanya
+    function openEditSkillModal(skill) {
+        const modal = document.getElementById("edit-skill-modal");
+        if (!modal) return;
+        document.getElementById('edit-skill-id').value = skill.id;
+        document.getElementById('edit-skill-name').value = skill.name;
+        document.getElementById('edit-skill-category').value = skill.category;
+        document.getElementById('edit-skill-proficiency').value = skill.proficiency;
+        document.getElementById('edit-proficiency-val').textContent = skill.proficiency;
+        document.getElementById('edit-skill-description').value = skill.description || '';
+        document.getElementById('edit-skill-logo').value = skill.logo_url || '';
+        modal.showPopover();
+    }
+
+    // Pengatur tampilan state (Loading, Error, Empty, Content)
     function displayPageSection({ showLoading = false, showError = false, showEmpty = false, showContent = false }) {
         loadingState.classList.toggle('hide', !showLoading);
         errorState.classList.toggle('hide', !showError);
@@ -155,32 +178,20 @@
         skillsContainer.classList.toggle('hide', !showContent);
     }
 
-    // 8. Merakit Elemen HTML untuk Hard Skill
-    function buildHardSkillElement(item) {
-        const skill = item.fields;
-        const skillId = item.pk;
-
+    // 5. Perakit Elemen Hard Skill dari data JSON DRF
+    function buildHardSkillElement(skill) {
         const div = document.createElement('div');
         div.className = 'floating-app-item';
         div.style.position = 'relative';
 
-        const editUrl = "{% url 'main:update_skill' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', skillId);
-        const deleteUrl = "{% url 'main:delete_skill' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', skillId);
-        const starUrl = "{% url 'main:toggle_star' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', skillId);
-
         let editBtn = '';
         if (IS_SUPERUSER || IS_EDITOR) {
-            editBtn = `<a href="${editUrl}" class="edit-icon-btn" title="Ubah ${escapeHtml(skill.name)}" aria-label="Ubah ${escapeHtml(skill.name)}">✎</a>`;
+            editBtn = `<button type="button" class="edit-icon-btn" title="Ubah ${escapeHtml(skill.name)}" aria-label="Ubah ${escapeHtml(skill.name)}">✎</button>`;
         }
 
         let deleteBtn = '';
         if (IS_SUPERUSER) {
-            deleteBtn = `
-                <form method="post" action="${deleteUrl}" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="delete-icon-btn" onclick="return confirm('Yakin ingin menghapus keahlian ${escapeHtml(skill.name)}?');" title="Hapus ${escapeHtml(skill.name)}">×</button>
-                </form>
-            `;
+            deleteBtn = `<button type="button" class="delete-icon-btn" title="Hapus ${escapeHtml(skill.name)}">×</button>`;
         }
 
         const iconHtml = skill.logo_url 
@@ -189,7 +200,6 @@
 
         const isStarredClass = skill.is_starred ? ' is-starred' : '';
         const starText = skill.is_starred ? 'Unstar' : 'Star';
-        const starTitle = skill.star_count > 0 ? `Dibintangi oleh ${escapeHtml(skill.starred_by_names)}` : 'Jadilah yang pertama memberi star';
 
         div.innerHTML = `
             <div class="skill-item-actions">
@@ -200,42 +210,42 @@
                 ${iconHtml}
             </div>
             <span class="app-label">${escapeHtml(skill.name)}</span>
-            <form method="post" action="${starUrl}" class="star-form" onsubmit="handleToggleStar(event, '${skillId}')">
-                {% csrf_token %}
-                <button type="submit" class="button button-star${isStarredClass}" title="${starTitle}">
+            <div class="star-form">
+                <button type="button" class="button button-star${isStarredClass}" title="Star Keahlian">
                     <span aria-hidden="true">★</span>
                     ${starText}
                     <span class="star-count">${skill.star_count}</span>
                 </button>
-            </form>
+            </div>
         `;
+
+        // Event listener tombol Ubah (Membuka modal edit langsung tanpa reload)
+        const editEl = div.querySelector('.edit-icon-btn');
+        if (editEl) editEl.addEventListener('click', () => openEditSkillModal(skill));
+
+        // Event listener tombol Hapus (AJAX DELETE tanpa reload)
+        const delEl = div.querySelector('.delete-icon-btn');
+        if (delEl) delEl.addEventListener('click', () => handleDeleteSkill(skill.id, skill.name));
+
+        // Event listener tombol Star (AJAX POST)
+        const starEl = div.querySelector('.button-star');
+        if (starEl) starEl.addEventListener('click', () => handleToggleStar(skill.id));
+
         return div;
     }
 
-    // 9. Merakit Elemen HTML untuk Soft Skill
-    function buildSoftSkillElement(item) {
-        const skill = item.fields;
-        const skillId = item.pk;
-
+    // 6. Perakit Elemen Soft Skill dari data JSON DRF
+    function buildSoftSkillElement(skill) {
         const div = document.createElement('div');
         div.className = 'soft-skill-bar';
         div.style.cssText = 'position: relative; display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 1rem;';
 
-        const editUrl = "{% url 'main:update_skill' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', skillId);
-        const deleteUrl = "{% url 'main:delete_skill' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', skillId);
-        const starUrl = "{% url 'main:toggle_star' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', skillId);
-
         let actionBtns = '';
         if (IS_SUPERUSER || IS_EDITOR) {
-            let delBtn = IS_SUPERUSER ? `
-                <form method="post" action="${deleteUrl}" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="delete-icon-btn" onclick="return confirm('Yakin ingin menghapus keahlian ${escapeHtml(skill.name)}?');" title="Hapus ${escapeHtml(skill.name)}">×</button>
-                </form>
-            ` : '';
+            const delBtn = IS_SUPERUSER ? `<button type="button" class="delete-icon-btn" title="Hapus ${escapeHtml(skill.name)}">×</button>` : '';
             actionBtns = `
                 <div class="soft-skill-actions" style="display: flex; gap: 0.35rem; align-items: center;">
-                    <a href="${editUrl}" class="edit-icon-btn" title="Ubah ${escapeHtml(skill.name)}" aria-label="Ubah ${escapeHtml(skill.name)}">✎</a>
+                    <button type="button" class="edit-icon-btn" title="Ubah ${escapeHtml(skill.name)}" aria-label="Ubah ${escapeHtml(skill.name)}">✎</button>
                     ${delBtn}
                 </div>
             `;
@@ -243,40 +253,46 @@
 
         const isStarredClass = skill.is_starred ? ' is-starred' : '';
         const starText = skill.is_starred ? 'Unstar' : 'Star';
-        const starTitle = skill.star_count > 0 ? `Dibintangi oleh ${escapeHtml(skill.starred_by_names)}` : 'Jadilah yang pertama memberi star';
 
         div.innerHTML = `
             <span class="bar-skill-name" style="text-align: left; margin-right: 0.5rem;">${escapeHtml(skill.name)}</span>
             <div style="display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0;">
-                <form method="post" action="${starUrl}" class="star-form" onsubmit="handleToggleStar(event, '${skillId}')">
-                    {% csrf_token %}
-                    <button type="submit" class="button button-star${isStarredClass}" title="${starTitle}">
-                        <span aria-hidden="true">★</span>
-                        ${starText}
-                        <span class="star-count">${skill.star_count}</span>
-                    </button>
-                </form>
+                <button type="button" class="button button-star${isStarredClass}" title="Star Keahlian">
+                    <span aria-hidden="true">★</span>
+                    ${starText}
+                    <span class="star-count">${skill.star_count}</span>
+                </button>
                 ${actionBtns}
             </div>
         `;
+
+        const editEl = div.querySelector('.edit-icon-btn');
+        if (editEl) editEl.addEventListener('click', () => openEditSkillModal(skill));
+
+        const delEl = div.querySelector('.delete-icon-btn');
+        if (delEl) delEl.addEventListener('click', () => handleDeleteSkill(skill.id, skill.name));
+
+        const starEl = div.querySelector('.button-star');
+        if (starEl) starEl.addEventListener('click', () => handleToggleStar(skill.id));
+
         return div;
     }
 
-    // 10. Mengambil Data Keahlian lewat Fetch API (AJAX GET)
+    // 7. Mengambil Data Keahlian melalui DRF GET (/api/v1/skills/)
     async function fetchSkills(searchQuery = "") {
         if (skillsAbortController) skillsAbortController.abort();
         skillsAbortController = new AbortController();
 
         try {
             displayPageSection({ showLoading: true });
-            const url = searchQuery ? `${BASE_SKILLS_ENDPOINT}?name=${encodeURIComponent(searchQuery)}` : BASE_SKILLS_ENDPOINT;
+            const url = searchQuery ? `${SKILLS_API_ENDPOINT}?name=${encodeURIComponent(searchQuery)}` : SKILLS_API_ENDPOINT;
 
             const response = await fetch(url, {
                 headers: { 'Accept': 'application/json' },
                 signal: skillsAbortController.signal,
             });
 
-            if (!response.ok) throw new Error('Failed to fetch skills');
+            if (!response.ok) throw new Error('Gagal mengambil data dari server');
             const data = await response.json();
 
             if (data.length === 0) {
@@ -288,29 +304,173 @@
                 let hasHard = false;
                 let hasSoft = false;
 
-                data.forEach(item => {
-                    if (item.fields.category === 'hard') {
-                        hardSkillsRow.appendChild(buildHardSkillElement(item));
+                data.forEach(skill => {
+                    if (skill.category === 'hard') {
+                        hardSkillsRow.appendChild(buildHardSkillElement(skill));
                         hasHard = true;
                     } else {
-                        softSkillsGrid.appendChild(buildSoftSkillElement(item));
+                        softSkillsGrid.appendChild(buildSoftSkillElement(skill));
                         hasSoft = true;
                     }
                 });
 
                 hardSkillsGroup.style.display = hasHard ? 'block' : 'none';
                 softSkillsGroup.style.display = hasSoft ? 'block' : 'none';
-
                 displayPageSection({ showContent: true });
             }
         } catch (error) {
             if (error.name === 'AbortError') return;
-            console.error('Error loading skills:', error);
+            console.error('Error memuat data:', error);
             displayPageSection({ showError: true });
         }
     }
 
-    // 11. Handler Pencarian dengan Debouncing
+    // 8. Handler Tambah Keahlian via DRF POST (/api/v1/skills/)
+    async function addSkill(event) {
+        event.preventDefault();
+        const submitButton = skillForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+
+        const formData = new FormData(skillForm);
+        const payload = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch(SKILLS_API_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json().catch(() => ({}));
+
+            if (response.status === 201) {
+                skillForm.reset();
+                closeSkillModal();
+                showToast('Berhasil', `Keahlian '${result.name}' berhasil ditambahkan!`, 'success');
+                fetchSkills(searchInput.value.trim());
+            } else if (response.status === 403) {
+                showToast('Akses Ditolak (403)', result.detail || result.message || 'Hanya pemilik yang dapat menambah keahlian.', 'error');
+            } else {
+                const errList = Object.entries(result).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`);
+                showToast('Gagal Menambahkan (400)', errList.join(' | ') || 'Data tidak valid.', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Koneksi Gagal', 'Tidak dapat terhubung ke server.', 'error');
+        } finally {
+            submitButton.disabled = false;
+        }
+    }
+
+    if (skillForm) skillForm.addEventListener('submit', addSkill);
+
+    // 9. Handler Ubah Keahlian via DRF PATCH (/api/v1/skills/<id>/)
+    async function handleEditSkillSubmit(event) {
+        event.preventDefault();
+        const submitBtn = editSkillForm.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+
+        const skillId = document.getElementById('edit-skill-id').value;
+        const payload = {
+            name: document.getElementById('edit-skill-name').value,
+            category: document.getElementById('edit-skill-category').value,
+            proficiency: parseInt(document.getElementById('edit-skill-proficiency').value, 10),
+            description: document.getElementById('edit-skill-description').value,
+            logo_url: document.getElementById('edit-skill-logo').value,
+        };
+
+        try {
+            const response = await fetch(`${SKILLS_API_ENDPOINT}${skillId}/`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json().catch(() => ({}));
+
+            if (response.ok) {
+                closeEditSkillModal();
+                showToast('Berhasil Diperbarui', `Keahlian '${result.name}' berhasil diubah!`, 'success');
+                fetchSkills(searchInput.value.trim());
+            } else if (response.status === 403) {
+                showToast('Akses Ditolak (403)', result.detail || 'Anda tidak berhak mengubah keahlian ini.', 'error');
+            } else {
+                const errList = Object.entries(result).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`);
+                showToast('Gagal Memperbarui (400)', errList.join(' | ') || 'Data tidak valid.', 'error');
+            }
+        } catch (error) {
+            console.error('Error edit:', error);
+            showToast('Koneksi Gagal', 'Tidak dapat terhubung ke server.', 'error');
+        } finally {
+            submitBtn.disabled = false;
+        }
+    }
+
+    if (editSkillForm) editSkillForm.addEventListener('submit', handleEditSkillSubmit);
+
+    // 10. Handler Hapus Keahlian via DRF DELETE (/api/v1/skills/<id>/) tanpa Reload
+    async function handleDeleteSkill(skillId, skillName) {
+        if (!confirm(`Yakin ingin menghapus keahlian '${skillName}'?`)) return;
+
+        try {
+            const response = await fetch(`${SKILLS_API_ENDPOINT}${skillId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+            });
+
+            if (response.status === 204) {
+                showToast('Berhasil Dihapus', `Keahlian '${skillName}' telah dihapus.`, 'success');
+                fetchSkills(searchInput.value.trim());
+            } else if (response.status === 403) {
+                const res = await response.json().catch(() => ({}));
+                showToast('Akses Ditolak (403)', res.detail || 'Hanya pemilik yang dapat menghapus keahlian.', 'error');
+            } else {
+                showToast('Gagal Menghapus', 'Terjadi kesalahan saat menghapus data.', 'error');
+            }
+        } catch (error) {
+            console.error('Error delete:', error);
+            showToast('Koneksi Gagal', 'Tidak dapat terhubung ke server.', 'error');
+        }
+    }
+
+    // 11. Handler Toggle Star via DRF POST (/api/v1/skills/<id>/star/)
+    async function handleToggleStar(skillId) {
+        if (!IS_AUTHENTICATED) {
+            showToast('Perlu Login', 'Silakan login terlebih dahulu untuk memberikan star.', 'normal');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${SKILLS_API_ENDPOINT}${skillId}/star/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+            });
+            const result = await response.json().catch(() => ({}));
+
+            if (response.ok) {
+                showToast('Star', result.message || 'Status star berhasil diperbarui.', 'success');
+                fetchSkills(searchInput.value.trim());
+            } else if (response.status === 403) {
+                showToast('Akses Ditolak', result.detail || 'Tidak diizinkan memberi star.', 'error');
+            } else {
+                showToast('Gagal', 'Terjadi kesalahan saat memproses star.', 'error');
+            }
+        } catch (error) {
+            console.error('Error star:', error);
+            showToast('Koneksi Gagal', 'Tidak dapat terhubung ke server.', 'error');
+        }
+    }
+
+    // 12. Handler Search (Debounced) & Kelola Keahlian
     function triggerSearch() {
         fetchSkills(searchInput.value.trim());
     }
@@ -326,44 +486,6 @@
         triggerSearch();
     });
 
-    // 12. Handler Tambah Keahlian via AJAX (POST)
-    async function addSkill(event) {
-        event.preventDefault();
-        const submitButton = skillForm.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-
-        try {
-            const response = await fetch(CREATE_SKILL_ENDPOINT, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': getCookie('csrftoken') },
-                body: new FormData(skillForm),
-            });
-            const result = await response.json().catch(() => ({}));
-
-            if (response.ok) {
-                skillForm.reset();
-                closeSkillModal();
-                showToast('Berhasil', 'Keahlian baru berhasil ditambahkan!', 'success');
-                fetchSkills(searchInput.value.trim());
-            } else {
-                const errorMessages = result.errors
-                    ? Object.values(result.errors).flat().map(error => error.message)
-                    : [result.message || `Terjadi kesalahan (status ${response.status}).`];
-                showToast('Gagal menambahkan keahlian', errorMessages.join(' '), 'error');
-            }
-        } catch (error) {
-            console.error('Error adding skill:', error);
-            showToast('Gagal menambahkan keahlian', 'Tidak dapat terhubung ke server.', 'error');
-        } finally {
-            submitButton.disabled = false;
-        }
-    }
-
-    if (skillForm) {
-        skillForm.addEventListener('submit', addSkill);
-    }
-
-    // 13. Fitur Tombol Kelola Keahlian (Mode Edit/Hapus)
     if (manageBtn && skillsSection) {
         manageBtn.addEventListener('click', function () {
             skillsSection.classList.toggle('edit-mode');
@@ -377,52 +499,7 @@
         });
     }
 
-    // --- FITUR EKSTRA: AJAX Star Toggle (Pemberian Star Tanpa Reload Halaman & Live Counter) ---
-    // 14. Handler AJAX untuk toggle star tanpa reload halaman
-    async function handleToggleStar(event, skillId) {
-        event.preventDefault(); // Mencegah reload halaman
-        
-        // Validasi status login pengguna
-        if (!IS_AUTHENTICATED) {
-            showToast('Perlu Login', 'Silakan login terlebih dahulu untuk memberikan star pada keahlian.', 'normal');
-            return;
-        }
-
-        const form = event.currentTarget;
-        const button = form.querySelector('button');
-        button.disabled = true; // Nonaktifkan tombol sementara untuk mencegah spam klik
-
-        // URL endpoint toggle star
-        const starUrl = "{% url 'main:toggle_star' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', skillId);
-
-        try {
-            // Kirim request POST via Fetch API
-            const response = await fetch(starUrl, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Accept': 'application/json',
-                },
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                showToast('Star', result.message, 'success');
-                fetchSkills(searchInput.value.trim()); // Perbarui data secara reaktif
-            } else if (response.status === 403 || response.redirected) {
-                showToast('Perlu Login', 'Silakan login terlebih dahulu.', 'normal');
-            } else {
-                showToast('Gagal', 'Terjadi kesalahan saat memproses star.', 'error');
-            }
-        } catch (error) {
-            console.error('Error toggling star:', error);
-            showToast('Gagal', 'Tidak dapat terhubung ke server.', 'error');
-        } finally {
-            button.disabled = false; // Aktifkan kembali tombol
-        }
-    }
-
-    // 15. Pemanggilan Data Pertama Kali saat Halaman Dibuka
+    // Pemanggilan data pertama kali saat halaman dimuat
     fetchSkills(searchInput.value.trim());
     </script>
 {% endblock content %}
