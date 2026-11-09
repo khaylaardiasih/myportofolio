@@ -176,3 +176,62 @@ Analisis Kritis Keterbatasan AI & Perbaikan Manual:
 2. Penyesuaian Unit Test AJAX: AI sempat menyarankan merender kembali data ke HTML agar test lama lolos. Saya menolak saran tersebut dan merombak unit test agar memvalidasi kerangka DOM AJAX (`#skills-container`, `#loading`, `#empty`), sesuai ketentuan tugas.
 
 3. Pengecekan Elemen Modal: AI awalnya membuat script yang langsung memanggil form modal tanpa validasi elemen. Saya menambahkan pengecekan agar tidak terjadi error di browser pengguna biasa saat modal tidak dirender.
+
+### Tugas 6
+
+1. Jelaskan apa yang dimaksud dengan REST dan mengapa mengembalikan JSON saja belum cukup untuk menyebut sebuah API sebagai RESTful! Jelaskan pula perbedaan PUT dan PATCH beserta contoh kapan masing-masing sebaiknya digunakan!
+   - REST (Representational State Transfer) adalah standar arsitektur komunikasi web berbasis protokol HTTP yang memisahkan peran client-server, bersifat stateless, dan mengorganisir data sebagai resources yang diakses melalui URI.
+   - Mengembalikan JSON saja belum cukup karena JSON hanyalah format data. Suatu API baru sah disebut RESTful jika mematuhi kaidah arsitektur REST: memanfaatkan HTTP verbs secara semantik (`GET`, `POST`, `PUT`/`PATCH`, `DELETE`), menggunakan kode status HTTP yang tepat (`200`, `201`, `204`, `400`, `403`), dan menggunakan URL berbasis kata benda jamak (`/api/v1/skills/`), bukan berbasis aksi (RPC).
+   - Perbedaan `PUT` dan `PATCH`:
+     - `PUT` (Full Replace): Mengganti seluruh data objek. Field yang tidak dikirimkan akan dihapus atau diatur ke nilai default.
+       - Contoh: Form edit keahlian lengkap di mana seluruh field (nama, kategori, proficiency, deskripsi) dikirimkan ulang untuk menimpa data lama.
+     - `PATCH` (Partial Update): Hanya mengubah field tertentu yang dikirim tanpa memengaruhi field lainnya.
+       - Contoh: Menggeser slider keahlian di mana payload hanya mengirim field yang berubah: `{"proficiency": 85}`.
+
+2. Jelaskan peran serializer pada Django REST Framework! Apa keuntungannya dibandingkan merakit dictionary secara manual dengan JsonResponse seperti pada Tutorial 05?
+   - Peran Serializer: Berfungsi sebagai jembatan dua arah, yaitu mengubah objek model Django/QuerySet menjadi JSON (serialisasi), serta mengurai JSON dari request menjadi data Python yang valid untuk disimpan ke database (deserialisasi), sekaligus menjalankan validasi data.
+   - Keuntungan dibanding `JsonResponse` manual:
+     - Menghilangkan kode perakitan dictionary yang panjang, berulang, dan rawan salah ketik (typo).
+     - Otomatisasi validasi tipe data, field wajib, sanitasi XSS (`validate_<field>`), dan penanganan pesan error yang rapi (HTTP 400).
+     - Terintegrasi langsung dengan fitur bawaan DRF seperti Browsable API dan serialisasi relasi model (many-to-many / foreign key).
+
+3. Jelaskan perbedaan autentikasi dan otorisasi pada Django REST Framework! Mengapa hak akses harus diperiksa dengan permission class di server, bukan hanya dengan menyembunyikan tombol di template?
+   - Autentikasi vs Otorisasi:
+     - Autentikasi: Menjawab "Siapa Anda?" yaitu proses memverifikasi identitas pengguna (misalnya melalui session cookie pada `SessionAuthentication`).
+     - Otorisasi: Menjawab "Apa yang boleh Anda lakukan?" yaitu proses memeriksa apakah pengguna yang sudah dikenali memiliki hak untuk mengakses atau mengubah data tertentu (misalnya lewat permission class).
+   - Mengapa wajib diperiksa di server:
+     - Menyembunyikan tombol di template hanyalah kenyamanan visual (UI/UX) di browser yang mudah dimanipulasi melalui Inspect Element atau Console.
+     - Pengguna tetap bisa mengirimkan request `POST`, `PATCH`, atau `DELETE` langsung ke endpoint server menggunakan cURL, Fetch API, atau Postman. Tanpa permission class di sisi server, data di database akan rentan diubah atau dihapus oleh pihak yang tidak berhak.
+
+4. Jelaskan mengapa permintaan yang mengubah data tetap memerlukan token CSRF ketika API memakai SessionAuthentication! Mengapa test yang memakai force_authenticate tidak cukup untuk membuktikan bahwa perlindungan CSRF berjalan?
+   - Kebutuhan Token CSRF: `SessionAuthentication` mengandalkan cookie browser (`sessionid`) yang otomatis terkirim pada setiap request ke server kita. Tanpa validasi token CSRF (`X-CSRFToken`), penyerang bisa menjebak browser pengguna lewat situs pihak ketiga untuk mengeksekusi request berbahaya ke API kita (Cross-Site Request Forgery).
+   - Mengapa `force_authenticate` tidak cukup: Karena fungsi `force_authenticate` pada `APIClient` sengaja dirancang untuk melewati (bypass) seluruh alur autentikasi dan middleware pengecekan CSRF agar memudahkan pengujian logika view dan permission. Akibatnya, test akan selalu lulus meskipun proteksi CSRF di server sebenarnya mati atau tidak terkonfigurasi dengan benar.
+
+
+## AI Disclosure & Analisis Kritis Keterbatasan AI
+
+Dalam pengerjaan Tugas 6 ini, saya menggunakan AI sebagai mitra diskusi teknis untuk memahami arsitektur Django REST Framework (DRF), merancang skema custom permission, dan menyusun skenario testing `APITestCase`.
+
+Tools yang Digunakan: ChatGPT
+
+Bagian yang Dibantu AI:
+1. Memberikan referensi awal sintaks `ModelSerializer` dan implementasi `SerializerMethodField`.
+2. Membantu memberikan kerangka dasar class permission turunan `BasePermission`.
+3. Memberikan referensi struktur pengujian berbasis `rest_framework.test.APITestCase`.
+
+Analisis Kritis Keterbatasan AI & Perbaikan Manual:
+
+1. Kesalahan Desain Arsitektur RESTful (RPC vs Resource-Based URL):
+   AI sempat menyarankan endpoint terpisah bergaya RPC seperti `/api/v1/skills/create/`, `/update/`, dan `/delete/`. Saya mengoreksinya menjadi URL resource-oriented tunggal (`/api/v1/skills/` dan `/api/v1/skills/<id>/`) yang memanfaatkan kata kerja HTTP semantik (`POST`, `PATCH`, `DELETE`) agar sepenuhnya memenuhi prinsip arsitektur RESTful.
+
+2. Kelalaian Passing Context Request pada Serializer (State Bug):
+   AI awalnya menginisialisasi `SkillSerializer(skills, many=True)` di API view tanpa argumen `context={'request': request}`. Hal ini menyebabkan method `get_is_starred` gagal mengakses `request.user` sehingga status star pengguna yang sedang login selalu salah bernilai `False`. Saya memperbaikinya secara manual dengan meneruskan context request ke seluruh pemanggilan serializer.
+
+3. Celah Otorisasi Penghapusan Data bagi Peran Editor (Security Flaw):
+   Rancangan permission awal dari AI menggabungkan izin modifikasi dan penghapusan untuk Editor. Hal ini melanggar spesifikasi RBAC karena Editor seharusnya tidak boleh menghapus data. Saya memperbaikinya di `IsPortfolioOwnerOrEditorOrReadOnly` dengan secara tegas menolak method `DELETE` bagi Editor dan menguncinya khusus untuk Superuser.
+
+4. Kelemahan Validasi Input Kosong Pasca-Sanitasi XSS (Edge Case):
+   Fungsi `validate_name` yang disarankan AI hanya memanggil `strip_tags` tanpa memeriksa hasil akhir string. Akibatnya, input seperti `<b></b>` lolos validasi dan tersimpan sebagai string kosong di database. Saya memperbaikinya dengan menambahkan pengecekan agar melempar `ValidationError` (HTTP 400) jika string menjadi kosong setelah tag HTML dibersihkan.
+
+5. Kekeliruan Konseptual Pengujian CSRF Menggunakan `force_authenticate` (Testing Methodology):
+   AI awalnya menyarankan pengujian keamanan CSRF menggunakan `self.client.force_authenticate`. Saya mengkritisi saran ini karena fungsi tersebut sengaja mem-bypass middleware CSRF di DRF demi efisiensi test view, sehingga menghasilkan false sense of security. Saya menyadari keterbatasan ini dan memisahkan pengujian logika hak akses dari validasi mekanisme keamanan sesi.
