@@ -3,5 +3,6 @@ from django.urls import include, path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", include("main.urls")),
+    path("api/v1/", include("main.api_urls")),  # Endpoint REST API Django REST Framework
+    path("", include("main.urls")),              # Halaman Web HTML
 ]
