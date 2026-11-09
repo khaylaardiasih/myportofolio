@@ -17,7 +17,7 @@ from main.permissions import (
 
 @api_view(['GET', 'POST'])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
-@permission_classes([IsPortfolioOwnerOrReadOnly])
+@permission_classes([IsPortfolioOwnerOrEditorOrReadOnly])
 def skill_list(request):
     """
     Endpoint koleksi keahlian (/api/v1/skills/):

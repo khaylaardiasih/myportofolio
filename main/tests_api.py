@@ -186,3 +186,25 @@ class SkillAPITestCase(APITestCase):
         created_skill = Skill.objects.get(id=response.data["id"])
         self.assertEqual(created_skill.name, "alert('hack')C++ Programming")
         self.assertEqual(created_skill.description, "Deskripsi aman")
+    
+    def test_visitor_cannot_star_skill(self):
+        """Pengunjung tanpa login ditolak saat mencoba memberi star (401/403)."""
+        response = self.client.post(f"/api/v1/skills/{self.skill.id}/star/")
+        self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+        self.assertEqual(self.skill.starred_by.count(), 0)
+
+    def test_csrf_protection_enforced_without_token(self):
+        """
+        Sesuai checklist: Menguji dengan APIClient(enforce_csrf_checks=True) dan .login()
+        untuk membuktikan bahwa request modifikasi data tanpa header X-CSRFToken ditolak (403 Forbidden).
+        """
+        csrf_client = APIClient(enforce_csrf_checks=True)
+        csrf_client.login(username="owner_user", password="password123")
+
+        # Request POST tanpa menyertakan token CSRF
+        response = csrf_client.post("/api/v1/skills/", {
+            "name": "Rust Programming",
+            "category": "hard",
+            "proficiency": 80,
+        })
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
