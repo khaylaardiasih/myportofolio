@@ -5,8 +5,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 
-from main.models import Skill, Experience
-from main.serializers import SkillSerializer, ExperienceSerializer
+from main.models import Skill, Experience, Project
+from main.serializers import SkillSerializer, ExperienceSerializer, ProjectSerializer
 from main.permissions import (
     IsPortfolioOwnerOrReadOnly,
     IsPortfolioOwnerOrEditorOrReadOnly,
@@ -120,4 +120,48 @@ def experience_detail(request, experience_id):
     """Endpoint detail pengalaman (/api/v1/experiences/<uuid>/)."""
     experience = get_object_or_404(Experience, pk=experience_id)
     serializer = ExperienceSerializer(experience)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# --- AUTH & PROJECT API ENDPOINTS (TUTORIAL 10) ---
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def api_logout(request):
+    """Mencabut auth token pemanggil jika ada dan mengembalikan HTTP 204."""
+    if request.auth:
+        request.auth.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET', 'POST'])
+def project_list(request):
+    """
+    Endpoint koleksi proyek (/api/v1/projects/):
+    - GET: Publik, mengembalikan seluruh proyek.
+    - POST: Terautentikasi (Token/Session), membuat proyek baru.
+    """
+    if request.method == 'GET':
+        projects = Project.objects.all()
+        serializer = ProjectSerializer(projects, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    elif request.method == 'POST':
+        if not request.user.is_authenticated:
+            return Response(
+                {"detail": "Authentication credentials were not provided."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        serializer = ProjectSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def project_detail(request, project_id):
+    """Endpoint detail proyek (/api/v1/projects/<uuid>/)."""
+    project = get_object_or_404(Project, pk=project_id)
+    serializer = ProjectSerializer(project)
     return Response(serializer.data, status=status.HTTP_200_OK)

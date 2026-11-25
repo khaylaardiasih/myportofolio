@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils.html import strip_tags
-from main.models import Skill, Experience
+from main.models import Skill, Experience, Project
 
 
 class SkillSerializer(serializers.ModelSerializer):
@@ -84,3 +84,20 @@ class ExperienceSerializer(serializers.ModelSerializer):
             'is_ongoing',
         ]
         read_only_fields = ['id', 'started_at']
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    """
+    Serializer untuk model Project (Tutorial 07 & 10).
+    """
+    class Meta:
+        model = Project
+        fields = [
+            'id',
+            'title',
+            'description',
+            'tech_stack',
+            'project_url',
+            'project_image_url',
+        ]
+        read_only_fields = ['id']
